@@ -1,0 +1,4 @@
+#!/bin/sh
+
+gradle bootJar
+java -Dserver.port=18091 -jar build/libs/simple-rate-retriever*.jar

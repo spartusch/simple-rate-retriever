@@ -1,0 +1,12 @@
+
+server.port: 8090
+
+provider:
+  coinMarketCap.baseUrl: "https://api.coinmarketcap.com"
+  onVista.baseUrl: "https://www.onvista.de"
+
+spring:
+    cache:
+        cache-names: StockExchangeRateCache, CoinMarketRateCache
+        caffeine:
+            spec: expireAfterWrite=60s
