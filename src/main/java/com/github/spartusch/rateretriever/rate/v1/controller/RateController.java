@@ -39,9 +39,9 @@ public class RateController {
     }
 
     @GetMapping(value = "/coinmarket/{symbol}/{currency}", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String getDigitalCurrencyRate(@PathVariable("symbol") final String symbol,
-                                         @PathVariable("currency") final String currencyCode,
-                                         @RequestParam(value = "locale", defaultValue = DEFAULT_LOCALE) final String locale) {
+    public String getCoinMarketRate(@PathVariable("symbol") final String symbol,
+                                    @PathVariable("currency") final String currencyCode,
+                                    @RequestParam(value = "locale", defaultValue = DEFAULT_LOCALE) final String locale) {
         return handleRateRequest(RateProviderType.COIN_MARKET, symbol, currencyCode, locale,
                 () -> rateService.getCoinMarketRate(symbol, currencyCode, locale)
         );
