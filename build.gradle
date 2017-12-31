@@ -37,3 +37,9 @@ dependencies {
     testCompile 'org.springframework.boot:spring-boot-starter-test'
     testCompile 'com.github.tomakehurst:wiremock-standalone:2.11.0'
 }
+
+test {
+    testLogging {
+        events "skipped", "failed"
+    }
+}
