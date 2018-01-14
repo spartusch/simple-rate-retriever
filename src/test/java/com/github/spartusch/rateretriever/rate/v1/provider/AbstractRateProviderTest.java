@@ -1,10 +1,11 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import io.reactivex.Maybe;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 import wiremock.org.apache.http.HttpHeaders;
 
 import java.math.BigDecimal;
@@ -38,38 +39,43 @@ public class AbstractRateProviderTest {
                 .withHeader(HttpHeaders.USER_AGENT, matching("[a-zA-Z ]+"))
                 .willReturn(aResponse().withStatus(200).withBody("response")));
 
-        final Maybe<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
+        final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
 
-        response.test().assertResult("response");
+        StepVerifier.create(response)
+                .expectNext("response")
+                .expectComplete()
+                .verify();
     }
 
     @Test
     public void test_getUrl_errorCase() {
         stubFor(get(urlEqualTo("/some/url")).willReturn(aResponse().withStatus(404)));
-        final Maybe<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
-        response.test().assertErrorMessage("Not Found");
+        final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
+        StepVerifier.create(response)
+                .expectErrorMessage("Not Found")
+                .verify();
     }
 
     @Test
     public void test_toBigDecimal_happyCase_localeEnglish() {
-        provider.toBigDecimal(Locale.ENGLISH, "1,234.567")
-                .test()
-                .assertValue(result -> result.compareTo(new BigDecimal("1234.567")) == 0)
-                .assertComplete();
+        StepVerifier.create(provider.toBigDecimal(Locale.ENGLISH, "1,234.567"))
+                .expectNextMatches(result -> result.compareTo(new BigDecimal("1234.567")) == 0)
+                .expectComplete()
+                .verify();
     }
 
     @Test
     public void test_toBigDecimal_happyCase_localeGerman() {
-        provider.toBigDecimal(Locale.GERMAN, "1.234,567")
-                .test()
-                .assertValue(result -> result.compareTo(new BigDecimal("1234.567")) == 0)
-                .assertComplete();
+        StepVerifier.create(provider.toBigDecimal(Locale.GERMAN, "1.234,567"))
+                .expectNextMatches(result -> result.compareTo(new BigDecimal("1234.567")) == 0)
+                .expectComplete()
+                .verify();
     }
 
     @Test
     public void test_toBigDecimal_errorCase() {
-        provider.toBigDecimal(Locale.ENGLISH, "noAmount")
-                .test()
-                .assertError(ParseException.class);
+        StepVerifier.create(provider.toBigDecimal(Locale.ENGLISH, "noAmount"))
+                .expectError(ParseException.class)
+                .verify();
     }
 }

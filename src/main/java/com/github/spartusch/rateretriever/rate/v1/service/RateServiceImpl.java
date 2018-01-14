@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -28,31 +29,37 @@ public class RateServiceImpl implements RateService {
         this.coinMarketRateProvider = coinMarketRateProvider;
     }
 
-    String getCurrentRate(final RateProvider provider, final String symbol, final String currencyCode,
-                          final String locale) {
-        if (!provider.isCurrencyCodeSupported(currencyCode)) {
-            throw new IllegalArgumentException("Currency code '" + currencyCode + "' not supported");
-        }
-
-        return provider.getCurrentRate(symbol, currencyCode)
+    // Visible for testing
+    Mono<String> getCurrentRate(final RateProvider provider, final String symbol, final String currencyCode,
+                                final String locale) {
+        log.info("Request: '{}', '{}', '{}'", symbol, currencyCode, locale);
+        return provider.isCurrencyCodeSupported(currencyCode)
+                .map(isSupported -> {
+                    if (!isSupported) {
+                        throw new IllegalArgumentException("Currency code '" + currencyCode + "' not supported");
+                    }
+                    return true;
+                })
+                .then(provider.getCurrentRate(symbol, currencyCode))
                 .map(rate -> {
                     final NumberFormat numberFormat = DecimalFormat.getInstance(Locale.forLanguageTag(locale));
                     numberFormat.setMinimumFractionDigits(4);
                     return numberFormat.format(rate);
                 })
                 .doOnError(e -> log.error("Error getting rate: {}, {}, {}", symbol, currencyCode, locale, e))
-                .blockingGet(); // blocking is required to get a cacheable return value
+                .cache()
+                .doOnNext(result -> log.info("Response: '{}', '{}', '{}' -> '{}'", symbol, currencyCode, locale, result));
     }
 
     @Override
     @Cacheable("CoinMarketRateCache")
-    public String getCoinMarketRate(final String symbol, final String currencyCode, final String locale) {
+    public Mono<String> getCoinMarketRate(final String symbol, final String currencyCode, final String locale) {
         return getCurrentRate(coinMarketRateProvider, symbol, currencyCode, locale);
     }
 
     @Override
     @Cacheable("StockExchangeRateCache")
-    public String getStockExchangeRate(final String symbol, final String currencyCode, final String locale) {
+    public Mono<String> getStockExchangeRate(final String symbol, final String currencyCode, final String locale) {
         return getCurrentRate(stockExchangeRateProvider, symbol, currencyCode, locale);
     }
 }

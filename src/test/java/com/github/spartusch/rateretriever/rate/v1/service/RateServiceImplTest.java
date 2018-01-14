@@ -1,15 +1,16 @@
 package com.github.spartusch.rateretriever.rate.v1.service;
 
 import com.github.spartusch.rateretriever.rate.v1.provider.RateProvider;
-import io.reactivex.Maybe;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,58 +35,52 @@ public class RateServiceImplTest {
 
     @Test
     public void test_getCurrentRate_happyCase_localeEnglish() {
-        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(true);
-        when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD")).thenReturn(Maybe.just(BigDecimal.TEN));
-        final String result = rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "en-US");
+        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(Mono.just(true));
+        when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD")).thenReturn(Mono.just(BigDecimal.TEN));
+        final String result = rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "en-US").block();
         assertThat(result).isEqualTo("10.0000");
     }
 
     @Test
     public void test_getCurrentRate_happyCase_localeGerman() {
-        when(coinMarketRateProvider.isCurrencyCodeSupported("EUR")).thenReturn(true);
-        when(coinMarketRateProvider.getCurrentRate("ripple", "EUR")).thenReturn(Maybe.just(BigDecimal.TEN));
-        final String result = rateService.getCurrentRate(coinMarketRateProvider, "ripple", "EUR", "de-DE");
+        when(coinMarketRateProvider.isCurrencyCodeSupported("EUR")).thenReturn(Mono.just(true));
+        when(coinMarketRateProvider.getCurrentRate("ripple", "EUR")).thenReturn(Mono.just(BigDecimal.TEN));
+        final String result = rateService.getCurrentRate(coinMarketRateProvider, "ripple", "EUR", "de-DE").block();
         assertThat(result).isEqualTo("10,0000");
     }
 
     @Test
     public void test_getCurrentRate_localeUnknown() {
-        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(true);
-        when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD")).thenReturn(Maybe.just(BigDecimal.TEN));
-        final String result = rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "nonsense");
+        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(Mono.just(true));
+        when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD")).thenReturn(Mono.just(BigDecimal.TEN));
+        final String result = rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "nonsense").block();
         assertThat(result).isEqualTo("10.0000");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void test_getCurrentRate_currencyCodeUnsupported() {
-        when(coinMarketRateProvider.isCurrencyCodeSupported("XXX")).thenReturn(false);
-        rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "XXX", "en-US");
+        when(coinMarketRateProvider.isCurrencyCodeSupported("XXX")).thenReturn(Mono.just(false));
+        when(coinMarketRateProvider.getCurrentRate(anyString(), anyString())).thenReturn(Mono.empty());
+        StepVerifier.create(rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "XXX", "en-US"))
+                .verifyError(IllegalArgumentException.class);
     }
 
     @Test
     public void test_getCurrentRate_exceptionInProcessing() {
-        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(true);
+        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(Mono.just(true));
         when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD"))
-                .thenReturn(Maybe.fromCallable(() -> { throw new RuntimeException("Exception message1"); }));
-
-        final Throwable throwable = catchThrowable(() -> {
-            rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "de-DE");
-        });
-
-        assertThat(throwable).hasMessage("Exception message1");
+                .thenReturn(Mono.error(new RuntimeException("Exception message1")));
+        StepVerifier.create(rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "de-DE"))
+                .verifyErrorMessage("Exception message1");
     }
 
     @Test
     public void test_getCurrentRate_errorInProcessing() {
-        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(true);
+        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(Mono.just(true));
         when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD"))
-                .thenReturn(Maybe.error(new RuntimeException("Exception message2")));
-
-        final Throwable throwable = catchThrowable(() -> {
-            rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "de-DE");
-        });
-
-        assertThat(throwable).hasMessage("Exception message2");
+                .thenReturn(Mono.error(new RuntimeException("Exception message2")));
+        StepVerifier.create(rateService.getCurrentRate(coinMarketRateProvider, "bitcoin", "USD", "de-DE"))
+                .verifyErrorMessage("Exception message2");
     }
 
     //
@@ -94,8 +89,8 @@ public class RateServiceImplTest {
 
     @Test
     public void test_getCoinMarketRate_callsCoinMarketRateProvider() {
-        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(true);
-        when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD")).thenReturn(Maybe.just(BigDecimal.TEN));
+        when(coinMarketRateProvider.isCurrencyCodeSupported("USD")).thenReturn(Mono.just(true));
+        when(coinMarketRateProvider.getCurrentRate("bitcoin", "USD")).thenReturn(Mono.just(BigDecimal.TEN));
 
         rateService.getCoinMarketRate("bitcoin", "USD", "en-US");
 
@@ -109,8 +104,8 @@ public class RateServiceImplTest {
 
     @Test
     public void test_getStockExchangeRate_callsStockExchangeRateProvider() {
-        when(stockExchangeRateProvider.isCurrencyCodeSupported("USD")).thenReturn(true);
-        when(stockExchangeRateProvider.getCurrentRate("ETF110", "USD")).thenReturn(Maybe.just(BigDecimal.TEN));
+        when(stockExchangeRateProvider.isCurrencyCodeSupported("USD")).thenReturn(Mono.just(true));
+        when(stockExchangeRateProvider.getCurrentRate("ETF110", "USD")).thenReturn(Mono.just(BigDecimal.TEN));
 
         rateService.getStockExchangeRate("ETF110", "USD", "en-US");
 

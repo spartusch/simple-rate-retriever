@@ -1,10 +1,10 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.apache.http.client.HttpResponseException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -48,7 +48,7 @@ public class CoinMarketCapProviderTest {
         stubWithJsonResponse("/v1/ticker/bitcoin?convert=EUR",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\",\n\"price_eur\": \"11,230.7300\"\n}");
-        final BigDecimal result = provider.getCurrentRate("bitcoin", "EUR").blockingGet();
+        final BigDecimal result = provider.getCurrentRate("bitcoin", "EUR").block();
         assertThat(result).isEqualByComparingTo("11230.73");
     }
 
@@ -57,7 +57,7 @@ public class CoinMarketCapProviderTest {
         stubWithJsonResponse("/v1/ticker/bitcoin?convert=USD",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\",\n\"price_eur\": \"11,230.7300\"\n}");
-        final BigDecimal result = provider.getCurrentRate("bitcoin", "USD").blockingGet();
+        final BigDecimal result = provider.getCurrentRate("bitcoin", "USD").block();
         assertThat(result).isEqualByComparingTo("14150.1367");
     }
 
@@ -66,10 +66,8 @@ public class CoinMarketCapProviderTest {
         stubWithJsonResponse("/v1/ticker/bitcoin?convert=",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\"\n}");
-        provider.getCurrentRate("bitcoin", "")
-                .test()
-                .assertError(RuntimeException.class)
-                .assertErrorMessage("Amount not found");
+        StepVerifier.create(provider.getCurrentRate("bitcoin", ""))
+                .verifyErrorMessage("Amount not found");
     }
 
     @Test
@@ -77,10 +75,8 @@ public class CoinMarketCapProviderTest {
         stubWithJsonResponse("/v1/ticker/bitcoin?convert=XXX",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\",\n}");
-        provider.getCurrentRate("bitcoin", "XXX")
-                .test()
-                .assertError(RuntimeException.class)
-                .assertErrorMessage("Amount not found");
+        StepVerifier.create(provider.getCurrentRate("bitcoin", "XXX"))
+                .verifyErrorMessage("Amount not found");
     }
 
     @Test
@@ -88,10 +84,8 @@ public class CoinMarketCapProviderTest {
         stubWithJsonResponse("/v1/ticker/foobar?convert=EUR",
                 404,
                 "{\n \"error\": \"id not found\"\n}");
-        provider.getCurrentRate("foobar", "EUR")
-                .test()
-                .assertError(HttpResponseException.class)
-                .assertErrorMessage("Not Found");
+        StepVerifier.create(provider.getCurrentRate("foobar", "EUR"))
+                .verifyErrorMessage("Not Found");
     }
 
     @Test
@@ -99,10 +93,8 @@ public class CoinMarketCapProviderTest {
         stubWithJsonResponse("/v1/ticker/bitcoin?convert=EUR",
                 503,
                 "");
-        provider.getCurrentRate("bitcoin", "EUR")
-                .test()
-                .assertError(HttpResponseException.class)
-                .assertErrorMessage("Service Unavailable");
+        StepVerifier.create(provider.getCurrentRate("bitcoin", "EUR"))
+                .verifyErrorMessage("Service Unavailable");
     }
 
     //
@@ -117,7 +109,7 @@ public class CoinMarketCapProviderTest {
                 "ZAR", "USD"
         ));
         for (final String currency : supportedCurrencies) {
-            assertThat(provider.isCurrencyCodeSupported(currency)).isTrue();
+            assertThat(provider.isCurrencyCodeSupported(currency).block()).isTrue();
         }
     }
 
@@ -129,22 +121,22 @@ public class CoinMarketCapProviderTest {
                 "ZAR", "USD"
         ));
         for (final String currency : supportedCurrencies) {
-            assertThat(provider.isCurrencyCodeSupported(currency.toLowerCase())).isTrue();
+            assertThat(provider.isCurrencyCodeSupported(currency.toLowerCase()).block()).isTrue();
         }
     }
 
     @Test
     public void test_isCurrencyCodeSupported_nullCode() {
-        assertThat(provider.isCurrencyCodeSupported(null)).isFalse();
+        assertThat(provider.isCurrencyCodeSupported(null).block()).isFalse();
     }
 
     @Test
     public void test_isCurrencyCodeSupported_emptyCode() {
-        assertThat(provider.isCurrencyCodeSupported("")).isFalse();
+        assertThat(provider.isCurrencyCodeSupported("").block()).isFalse();
     }
 
     @Test
     public void test_isCurrencyCodeSupported_unsupportedCode() {
-        assertThat(provider.isCurrencyCodeSupported("XXX")).isFalse();
+        assertThat(provider.isCurrencyCodeSupported("XXX").block()).isFalse();
     }
 }

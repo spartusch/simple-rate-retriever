@@ -3,8 +3,10 @@ package com.github.spartusch.rateretriever.rate.v1.service;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,44 +25,47 @@ public class IqyFileServiceImplTest {
     // generateIqyContentForRequest
     //
 
-    private HttpServletRequest mockRequestFor(final String url, final String queryString) {
-        final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        when(request.getRequestURL()).thenReturn(new StringBuffer(url));
-        when(request.getQueryString()).thenReturn(queryString);
-        return request;
+    private HttpRequest mockRequestFor(final String url) {
+        try {
+            final HttpRequest request = Mockito.mock(HttpRequest.class);
+            when(request.getURI()).thenReturn(new URI(url));
+            return request;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     public void test_generateIqyContentForRequest_happyCase() {
-        final HttpServletRequest request = mockRequestFor("http://foo/bar/iqy", "a=b");
+        final HttpRequest request = mockRequestFor("http://foo/bar/iqy?a=b");
         final byte[] result = iqyFileService.generateIqyContentForRequest(request, "/iqy");
         assertThat(result).isEqualTo("http://foo/bar?a=b\r\n".getBytes(Charset.forName("UTF-8")));
     }
 
     @Test
     public void test_generateIqyContentForRequest_happyCase_noQueryString() {
-        final HttpServletRequest request = mockRequestFor("http://foo/bar/iqy", null);
+        final HttpRequest request = mockRequestFor("http://foo/bar/iqy");
         final byte[] result = iqyFileService.generateIqyContentForRequest(request, "/iqy");
         assertThat(result).isEqualTo("http://foo/bar\r\n".getBytes(Charset.forName("UTF-8")));
     }
 
     @Test
     public void test_generateIqyContentForRequest_noDiscriminatorInUrl() {
-        final HttpServletRequest request = mockRequestFor("http://foo/bar", null);
+        final HttpRequest request = mockRequestFor("http://foo/bar");
         final byte[] result = iqyFileService.generateIqyContentForRequest(request, "/iqy");
         assertThat(result).isEqualTo("http://foo/bar\r\n".getBytes(Charset.forName("UTF-8")));
     }
 
     @Test
     public void test_generateIqyContentForRequest_noDiscriminator() {
-        final HttpServletRequest request = mockRequestFor("http://foo/bar", null);
+        final HttpRequest request = mockRequestFor("http://foo/bar");
         final byte[] result = iqyFileService.generateIqyContentForRequest(request, "");
         assertThat(result).isEqualTo("http://foo/bar\r\n".getBytes(Charset.forName("UTF-8")));
     }
 
     @Test(expected = AssertionError.class)
     public void test_generateIqyContentForRequest_nullDiscriminator() {
-        final HttpServletRequest request = mockRequestFor("http://foo/bar", null);
+        final HttpRequest request = mockRequestFor("http://foo/bar");
         iqyFileService.generateIqyContentForRequest(request, null);
     }
 

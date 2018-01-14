@@ -1,27 +1,28 @@
 package com.github.spartusch.rateretriever.rate.v1.service;
 
+import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
 import java.nio.charset.Charset;
 
 @Service
 public class IqyFileServiceImpl implements IqyFileService {
 
     @Override
-    public byte[] generateIqyContentForRequest(final HttpServletRequest request, final String iqyUrlDiscriminator) {
+    public byte[] generateIqyContentForRequest(final HttpRequest request, final String iqyUrlDiscriminator) {
         assert iqyUrlDiscriminator != null;
 
-        final StringBuffer sb = request.getRequestURL();
+        final URI uri = request.getURI();
+        final StringBuilder sb = new StringBuilder(uri.toString());
 
         final int iqyUrlDiscriminatorIndex = sb.lastIndexOf(iqyUrlDiscriminator);
         if (iqyUrlDiscriminatorIndex > -1) {
             sb.delete(iqyUrlDiscriminatorIndex, sb.length());
         }
 
-        final String queryString = request.getQueryString();
-        if (queryString != null) {
-            sb.append("?").append(queryString);
+        if (uri.getQuery() != null) {
+            sb.append("?").append(uri.getQuery());
         }
 
         sb.append("\r\n");

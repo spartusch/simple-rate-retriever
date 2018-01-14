@@ -1,16 +1,13 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
-import io.reactivex.Maybe;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -37,18 +34,14 @@ public class CoinMarketCapRateProvider extends AbstractRateProvider implements R
     }
 
     @Override
-    public Maybe<BigDecimal> getCurrentRate(final String symbol, final String currencyCode) {
-        final URL url;
-        try {
-            URIBuilder uriBuilder = new URIBuilder(baseUrl);
-            uriBuilder.setPath(URL_PATH + symbol);
-            uriBuilder.setParameter("convert", currencyCode);
-            url = uriBuilder.build().toURL();
-        } catch (URISyntaxException|MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-        return Maybe.just(url)
-                .flatMap(url_ -> getUrl(url_.toString(), MediaType.APPLICATION_JSON_VALUE))
+    public Mono<BigDecimal> getCurrentRate(final String symbol, final String currencyCode) {
+        return Mono.fromCallable(() -> {
+                    final URIBuilder uriBuilder = new URIBuilder(baseUrl);
+                    uriBuilder.setPath(URL_PATH + symbol);
+                    uriBuilder.setParameter("convert", currencyCode);
+                    return uriBuilder.build().toString();
+                })
+                .flatMap(url -> getUrl(url, MediaType.APPLICATION_JSON_VALUE))
                 .map(content -> {
                     final Matcher matcher = extractionPattern.matcher(content);
                     while (matcher.find()) {
@@ -63,8 +56,7 @@ public class CoinMarketCapRateProvider extends AbstractRateProvider implements R
     }
 
     @Override
-    public boolean isCurrencyCodeSupported(final String currencyCode) {
-        return currencyCode != null && supportedCurrencies.contains(currencyCode.toUpperCase());
+    public Mono<Boolean> isCurrencyCodeSupported(final String currencyCode) {
+        return Mono.just(currencyCode != null && supportedCurrencies.contains(currencyCode.toUpperCase()));
     }
-
 }

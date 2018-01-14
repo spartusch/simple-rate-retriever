@@ -1,10 +1,10 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
-import io.reactivex.Maybe;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -34,23 +34,25 @@ public class OnVistaRateProvider extends AbstractRateProvider implements RatePro
         this.symbolToUrlCache = new HashMap<>();
     }
 
-    private Maybe<String> extractPattern(final Pattern pattern, final String content, final String errorMessage) {
-        final Matcher matcher = pattern.matcher(content);
-        if (matcher.find()) {
-            for (int i = 1; i <= matcher.groupCount(); i++) {
-                if (matcher.group(i) != null) {
-                    return Maybe.just(matcher.group(i));
+    private Mono<String> extractPattern(final Pattern pattern, final String content, final String errorMessage) {
+        return Mono.fromCallable(() -> {
+            final Matcher matcher = pattern.matcher(content);
+            if (matcher.find()) {
+                for (int i = 1; i <= matcher.groupCount(); i++) {
+                    if (matcher.group(i) != null) {
+                        return matcher.group(i);
+                    }
                 }
             }
-        }
-        return Maybe.error(new RuntimeException(errorMessage));
+            throw new RuntimeException(errorMessage);
+        });
     }
 
     @Override
-    public Maybe<BigDecimal> getCurrentRate(final String symbol, final String currencyCode) {
-        return Maybe.fromCallable(() -> symbolToUrlCache.get(symbol))
+    public Mono<BigDecimal> getCurrentRate(final String symbol, final String currencyCode) {
+        return Mono.fromCallable(() -> symbolToUrlCache.get(symbol))
                 .switchIfEmpty(
-                        Maybe.just(baseSearchUrl + symbol)
+                        Mono.just(baseSearchUrl + symbol)
                                 // Search for the asset link
                                 .flatMap(searchUrl -> getUrl(searchUrl, MediaType.APPLICATION_JSON_VALUE))
                                 .flatMap(searchResult -> extractPattern(assetPagePattern, searchResult, "Asset not found"))
@@ -66,8 +68,7 @@ public class OnVistaRateProvider extends AbstractRateProvider implements RatePro
     }
 
     @Override
-    public boolean isCurrencyCodeSupported(final String currencyCode) {
-        return "EUR".equalsIgnoreCase(currencyCode);
+    public Mono<Boolean> isCurrencyCodeSupported(final String currencyCode) {
+        return Mono.just("EUR".equalsIgnoreCase(currencyCode));
     }
-
 }
