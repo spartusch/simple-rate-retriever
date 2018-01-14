@@ -85,7 +85,7 @@ public class CoinMarketCapProviderTest {
                 404,
                 "{\n \"error\": \"id not found\"\n}");
         StepVerifier.create(provider.getCurrentRate("foobar", "EUR"))
-                .verifyErrorMessage("Not Found");
+                .verifyErrorMatches(e -> e.getMessage().contains("Not Found"));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class CoinMarketCapProviderTest {
                 503,
                 "");
         StepVerifier.create(provider.getCurrentRate("bitcoin", "EUR"))
-                .verifyErrorMessage("Service Unavailable");
+                .verifyErrorMatches(e -> e.getMessage().contains("Service Unavailable"));
     }
 
     //

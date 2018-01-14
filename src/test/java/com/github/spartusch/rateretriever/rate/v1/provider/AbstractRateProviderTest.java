@@ -43,8 +43,7 @@ public class AbstractRateProviderTest {
 
         StepVerifier.create(response)
                 .expectNext("response")
-                .expectComplete()
-                .verify();
+                .verifyComplete();
     }
 
     @Test
@@ -52,30 +51,26 @@ public class AbstractRateProviderTest {
         stubFor(get(urlEqualTo("/some/url")).willReturn(aResponse().withStatus(404)));
         final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
         StepVerifier.create(response)
-                .expectErrorMessage("Not Found")
-                .verify();
+                .verifyErrorMatches(e -> e.getMessage().contains("Not Found"));
     }
 
     @Test
     public void test_toBigDecimal_happyCase_localeEnglish() {
         StepVerifier.create(provider.toBigDecimal(Locale.ENGLISH, "1,234.567"))
                 .expectNextMatches(result -> result.compareTo(new BigDecimal("1234.567")) == 0)
-                .expectComplete()
-                .verify();
+                .verifyComplete();
     }
 
     @Test
     public void test_toBigDecimal_happyCase_localeGerman() {
         StepVerifier.create(provider.toBigDecimal(Locale.GERMAN, "1.234,567"))
                 .expectNextMatches(result -> result.compareTo(new BigDecimal("1234.567")) == 0)
-                .expectComplete()
-                .verify();
+                .verifyComplete();
     }
 
     @Test
     public void test_toBigDecimal_errorCase() {
         StepVerifier.create(provider.toBigDecimal(Locale.ENGLISH, "noAmount"))
-                .expectError(ParseException.class)
-                .verify();
+                .verifyError(ParseException.class);
     }
 }

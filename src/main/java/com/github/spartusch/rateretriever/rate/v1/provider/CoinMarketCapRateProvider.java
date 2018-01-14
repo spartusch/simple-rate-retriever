@@ -1,6 +1,5 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -35,12 +34,9 @@ public class CoinMarketCapRateProvider extends AbstractRateProvider implements R
 
     @Override
     public Mono<BigDecimal> getCurrentRate(final String symbol, final String currencyCode) {
-        return Mono.fromCallable(() -> {
-                    final URIBuilder uriBuilder = new URIBuilder(baseUrl);
-                    uriBuilder.setPath(URL_PATH + symbol);
-                    uriBuilder.setParameter("convert", currencyCode);
-                    return uriBuilder.build().toString();
-                })
+        return Mono.fromCallable(() ->
+                    baseUrl + URL_PATH + symbol + "?" + "convert=" + currencyCode
+                )
                 .flatMap(url -> getUrl(url, MediaType.APPLICATION_JSON_VALUE))
                 .map(content -> {
                     final Matcher matcher = extractionPattern.matcher(content);
