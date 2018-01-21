@@ -5,6 +5,8 @@ provider:
   coinMarketCap.baseUrl: "https://api.coinmarketcap.com"
   onVista.baseUrl: "https://www.onvista.de"
 
+logging.level.com.github.spartusch.rateretriever: DEBUG
+
 spring:
     cache:
         cache-names: StockExchangeRateCache, CoinMarketRateCache

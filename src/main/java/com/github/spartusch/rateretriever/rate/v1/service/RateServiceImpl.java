@@ -32,7 +32,6 @@ public class RateServiceImpl implements RateService {
     // Visible for testing
     Mono<String> getCurrentRate(final RateProvider provider, final String symbol, final String currencyCode,
                                 final String locale) {
-        log.info("Request: '{}', '{}', '{}'", symbol, currencyCode, locale);
         return provider.isCurrencyCodeSupported(currencyCode)
                 .map(isSupported -> {
                     if (!isSupported) {
@@ -48,7 +47,7 @@ public class RateServiceImpl implements RateService {
                 })
                 .doOnError(e -> log.error("Error getting rate: {}, {}, {}", symbol, currencyCode, locale, e))
                 .cache()
-                .doOnNext(result -> log.info("Response: '{}', '{}', '{}' -> '{}'", symbol, currencyCode, locale, result));
+                .doOnNext(result -> log.debug("Rate: '{}', '{}', '{}' -> '{}'", symbol, currencyCode, locale, result));
     }
 
     @Override
