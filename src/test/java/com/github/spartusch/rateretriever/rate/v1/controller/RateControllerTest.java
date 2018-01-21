@@ -11,18 +11,26 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @RunWith(SpringRunner.class)
 @WebFluxTest(RateController.class)
+@TestPropertySource(properties = {
+        "rate.events.interval=10"
+})
 public class RateControllerTest {
 
     @Autowired
@@ -50,7 +58,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_getStockExchangeRate_missingLocaleDefaultsToUs() throws Exception {
+    public void test_getStockExchangeRate_missingLocaleDefaultsToUs() {
         given(rateService.getStockExchangeRate("ETF110", "EUR", "en-US")).willReturn(Mono.empty());
 
         webTestClient.get().uri("/rate/v1/stockexchange/ETF110/EUR")
@@ -62,7 +70,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_getStockExchangeRate_IllegalArgumentException() throws Exception {
+    public void test_getStockExchangeRate_IllegalArgumentException() {
         given(rateService.getStockExchangeRate("ETF110", "XXX", "en-US"))
                 .willReturn(Mono.error(new IllegalArgumentException("Error message")));
         webTestClient.get().uri("/rate/v1/stockexchange/ETF110/XXX")
@@ -72,7 +80,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_getStockExchangeRate_RuntimeException() throws Exception {
+    public void test_getStockExchangeRate_RuntimeException() {
         given(rateService.getStockExchangeRate("ETF110", "XXX", "en-US"))
                 .willReturn(Mono.error(new RuntimeException("Error message")));
         webTestClient.get().uri("/rate/v1/stockexchange/ETF110/XXX")
@@ -86,7 +94,7 @@ public class RateControllerTest {
     //
 
     @Test
-    public void test_getCoinMarketRate_happyCase() throws Exception {
+    public void test_getCoinMarketRate_happyCase() {
         given(rateService.getCoinMarketRate("bitcoin", "EUR", "de-DE"))
                 .willReturn(Mono.just("10.000,0000"));
         webTestClient.get().uri("/rate/v1/coinmarket/bitcoin/EUR?locale=de-DE")
@@ -97,7 +105,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_getCoinMarketRate_missingLocaleDefaultsToUs() throws Exception {
+    public void test_getCoinMarketRate_missingLocaleDefaultsToUs() {
         given(rateService.getCoinMarketRate("bitcoin", "EUR", "en-US")).willReturn(Mono.empty());
 
         webTestClient.get().uri("/rate/v1/coinmarket/bitcoin/EUR")
@@ -109,7 +117,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_getCoinMarketRate_IllegalArgumentException() throws Exception {
+    public void test_getCoinMarketRate_IllegalArgumentException() {
         given(rateService.getCoinMarketRate("bitcoin", "XXX", "en-US"))
                 .willReturn(Mono.error(new IllegalArgumentException("Error message")));
         webTestClient.get().uri("/rate/v1/coinmarket/bitcoin/XXX")
@@ -119,7 +127,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_getCoinMarketRate_RuntimeException() throws Exception {
+    public void test_getCoinMarketRate_RuntimeException() {
         given(rateService.getCoinMarketRate("bitcoin", "XXX", "en-US"))
                 .willReturn(Mono.error(new RuntimeException("Error message")));
         webTestClient.get().uri("/rate/v1/coinmarket/bitcoin/XXX").exchange()
@@ -128,11 +136,124 @@ public class RateControllerTest {
     }
 
     //
+    // getCoinMarketRatesStream
+    //
+
+    @Test
+    public void test_getCoinMarketRatesStream_happyCase() {
+        given(rateService.getCoinMarketRate("bitcoin", "EUR", "de-DE"))
+                .willReturn(Mono.just("10.000,0000"))
+                .willReturn(Mono.just("10.000,0000"))
+                .willReturn(Mono.just("10.000,0000"))
+                .willReturn(Mono.just("11.000,0000"))
+                .willReturn(Mono.just("12.000,0000"));
+
+        final FluxExchangeResult<String> result = webTestClient.get().uri("/rate/v1/coinmarket/bitcoin/EUR?locale=de-DE")
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(String.class);
+
+        assertThat(result.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        StepVerifier.create(result.getResponseBody())
+                .expectNext("10.000,0000", "11.000,0000", "12.000,0000")
+                .thenCancel()
+                .verify();
+    }
+
+    @Test
+    public void test_getCoinMarketRatesStream_missingLocaleDefaultsToUs() {
+        given(rateService.getCoinMarketRate("bitcoin", "EUR", "en-US")).willReturn(Mono.just("123"));
+
+        final FluxExchangeResult<String> result = webTestClient.get().uri("/rate/v1/coinmarket/bitcoin/EUR")
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(String.class);
+
+        assertThat(result.getStatus()).isEqualTo(HttpStatus.OK);
+        StepVerifier.create(result.getResponseBody()).thenCancel();
+        verify(rateService, atLeastOnce()).getCoinMarketRate("bitcoin", "EUR", "en-US");
+    }
+
+    @Test
+    public void test_getCoinMarketRatesStream_IllegalArgumentException() {
+        given(rateService.getCoinMarketRate("bitcoin", "XXX", "en-US"))
+                .willReturn(Mono.error(new IllegalArgumentException("Error message")));
+
+        final FluxExchangeResult<String> result = webTestClient.get().uri("/rate/v1/coinmarket/bitcoin/XXX")
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(String.class);
+
+        assertThat(result.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        StepVerifier.create(result.getResponseBody())
+                .expectNext("Error message")
+                .verifyComplete();
+    }
+
+    //
+    // getStockExchangeRatesStream
+    //
+
+    @Test
+    public void test_getStockExchangeRatesStream_happyCase() {
+        given(rateService.getStockExchangeRate("ETF110", "EUR", "de-DE"))
+                .willReturn(Mono.just("46,0000"))
+                .willReturn(Mono.just("46,0000"))
+                .willReturn(Mono.just("47,0000"))
+                .willReturn(Mono.just("48,0000"));
+
+        final FluxExchangeResult<String> result = webTestClient.get().uri("/rate/v1/stockexchange/ETF110/EUR?locale=de-DE")
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(String.class);
+
+        assertThat(result.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        StepVerifier.create(result.getResponseBody())
+                .expectNext("46,0000", "47,0000", "48,0000")
+                .thenCancel()
+                .verify();
+    }
+
+    @Test
+    public void test_getStockExchangeRatesStream_missingLocaleDefaultsToUs() {
+        given(rateService.getStockExchangeRate("ETF110", "EUR", "en-US")).willReturn(Mono.just("123"));
+
+        final FluxExchangeResult<String> result = webTestClient.get().uri("/rate/v1/stockexchange/ETF110/EUR")
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(String.class);
+
+        assertThat(result.getStatus()).isEqualTo(HttpStatus.OK);
+        StepVerifier.create(result.getResponseBody()).thenCancel();
+        verify(rateService, atLeastOnce()).getStockExchangeRate("ETF110", "EUR", "en-US");
+    }
+
+    @Test
+    public void test_getStockExchangeRatesStream_IllegalArgumentException() {
+        given(rateService.getStockExchangeRate("ETF110", "XXX", "en-US"))
+                .willReturn(Mono.error(new IllegalArgumentException("Error message")));
+
+        final FluxExchangeResult<String> result = webTestClient.get().uri("/rate/v1/stockexchange/ETF110/XXX")
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(String.class);
+
+        assertThat(result.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        StepVerifier.create(result.getResponseBody())
+                .expectNext("Error message")
+                .verifyComplete();
+    }
+
+    //
     // downloadIqyFileForRequest
     //
 
     @Test
-    public void test_downloadIqyFileForRequest_happyCase() throws Exception {
+    public void test_downloadIqyFileForRequest_happyCase() {
         given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "loc"))
                 .willReturn("filename.iqy");
         given(iqyFileService.generateIqyContentForRequest(any(ServerHttpRequest.class), eq("/iqy")))
@@ -147,7 +268,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_downloadIqyFileForRequest_missingLocaleDefaultsToUs() throws Exception {
+    public void test_downloadIqyFileForRequest_missingLocaleDefaultsToUs() {
         given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "en-US"))
                 .willReturn("");
         given(iqyFileService.generateIqyContentForRequest(any(ServerHttpRequest.class), eq("/iqy")))
@@ -162,7 +283,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_downloadIqyFileForRequest_IllegalArgumentException() throws Exception {
+    public void test_downloadIqyFileForRequest_IllegalArgumentException() {
         given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "loc"))
                 .willThrow(new IllegalArgumentException("Error message"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
@@ -172,7 +293,7 @@ public class RateControllerTest {
     }
 
     @Test
-    public void test_downloadIqyFileForRequest_RuntimeException() throws Exception {
+    public void test_downloadIqyFileForRequest_RuntimeException() {
         given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "loc"))
                 .willThrow(new RuntimeException("Error message"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
