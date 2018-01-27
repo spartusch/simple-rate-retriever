@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copy this file to .git/hooks to enable this post-receive hook
+
 project_name='simple-rate-retriever'
 deploy_dir='/home/pi/deploy/simple-rate-retriever'
 repo_dir='/home/pi/repos/simple-rate-retriever.git'
@@ -24,11 +26,12 @@ do
 
 		echo
 		echo "=> Building deployed master branch..."
-		$deploy_dir/gradlew -p $deploy_dir bootJar
+		$deploy_dir/gradlew -p $deploy_dir clean bootJar
 
 		echo
-		echo "=> Starting new instance..."
-		nohup java -Dserver.port=$server_port -jar $deploy_dir/build/libs/$project_name*.jar &>$deploy_dir/output &
+		jar_file=$deploy_dir/build/libs/$project_name*.jar
+		echo "=> Starting new instance ("$(basename $jar_file)") on port $server_port..."
+		nohup java -Dserver.port=$server_port -jar $jar_file &>$deploy_dir/output &
 
 		echo "=> Done"
     else
