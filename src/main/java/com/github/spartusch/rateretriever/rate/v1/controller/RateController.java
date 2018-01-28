@@ -1,15 +1,14 @@
 package com.github.spartusch.rateretriever.rate.v1.controller;
 
-import com.github.spartusch.rateretriever.rate.v1.service.IqyFileService;
 import com.github.spartusch.rateretriever.rate.v1.service.RateService;
+import com.github.spartusch.webquery.WebQuery;
+import com.github.spartusch.webquery.WebQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,15 +32,15 @@ public class RateController {
     private static final Logger log = LoggerFactory.getLogger(RateController.class);
 
     private final RateService rateService;
-    private final IqyFileService iqyFileService;
+    private final WebQueryService webQueryService;
     private final Duration eventInterval;
 
     @Autowired
     public RateController(final RateService rateService,
-                          final IqyFileService iqyFileService,
+                          final WebQueryService webQueryService,
                           @Value("${rate.events.interval:10000}") final int eventIntervalMillis) {
         this.rateService = rateService;
-        this.iqyFileService = iqyFileService;
+        this.webQueryService = webQueryService;
         this.eventInterval = Duration.ofMillis(eventIntervalMillis);
     }
 
@@ -91,22 +90,10 @@ public class RateController {
     public HttpEntity<byte[]> downloadIqyFileForRequest(@PathVariable("provider") final String provider,
                                                         @PathVariable("symbol") final String symbol,
                                                         @PathVariable("currency") final String currencyCode,
-                                                        @RequestParam(value = "locale", defaultValue = DEFAULT_LOCALE) final String locale,
                                                         final ServerHttpRequest request) {
-        log.info("IQY request: {}", request.getURI());
-
-        final byte[] fileContent = iqyFileService.generateIqyContentForRequest(request, "/iqy");
-        final String fileName = iqyFileService.getIqyFileName(provider, symbol, currencyCode, locale);
-
-        log.info("Sending IQY file '{}'", fileName);
-        log.debug("Content of '{}':\n{}", fileName, fileContent);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-        headers.setContentLength(fileContent.length);
-
-        return new HttpEntity<>(fileContent, headers);
+        final WebQuery webQuery = webQueryService.createWebQuery(request.getURI().toString(), "/iqy");
+        webQuery.setFileName(String.format("%s_%s.iqy", symbol, currencyCode.toUpperCase()));
+        return webQuery.toHttpEntity();
     }
 
     @ExceptionHandler

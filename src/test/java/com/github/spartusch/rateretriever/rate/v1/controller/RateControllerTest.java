@@ -1,7 +1,8 @@
 package com.github.spartusch.rateretriever.rate.v1.controller;
 
-import com.github.spartusch.rateretriever.rate.v1.service.IqyFileService;
 import com.github.spartusch.rateretriever.rate.v1.service.RateService;
+import com.github.spartusch.webquery.WebQuery;
+import com.github.spartusch.webquery.WebQueryService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.FluxExchangeResult;
@@ -18,9 +18,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.nio.charset.Charset;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
@@ -40,7 +40,7 @@ public class RateControllerTest {
     private RateService rateService;
 
     @MockBean
-    private IqyFileService iqyFileService;
+    private WebQueryService webQueryService;
 
     //
     // getStockExchangeRate
@@ -254,37 +254,20 @@ public class RateControllerTest {
 
     @Test
     public void test_downloadIqyFileForRequest_happyCase() {
-        given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "loc"))
-                .willReturn("filename.iqy");
-        given(iqyFileService.generateIqyContentForRequest(any(ServerHttpRequest.class), eq("/iqy")))
-                .willReturn("content".getBytes());
+        given(webQueryService.createWebQuery("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
+                .willReturn(new WebQuery("content".getBytes(), Charset.forName("UTF-8"), "filename.iqy"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().contentDisposition(ContentDisposition.parse("attachment; filename=filename.iqy"))
+                .expectHeader().contentDisposition(ContentDisposition.parse("attachment; filename=symbol_CURRENCY.iqy"))
                 .expectHeader().contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .expectHeader().contentLength("content".length())
                 .expectBody(String.class).isEqualTo("content");
     }
 
     @Test
-    public void test_downloadIqyFileForRequest_missingLocaleDefaultsToUs() {
-        given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "en-US"))
-                .willReturn("");
-        given(iqyFileService.generateIqyContentForRequest(any(ServerHttpRequest.class), eq("/iqy")))
-                .willReturn("".getBytes());
-
-        webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy")
-                .exchange()
-                .expectStatus().isOk();
-
-        verify(iqyFileService, times(1))
-                .getIqyFileName("provider", "symbol", "currency", "en-US");
-    }
-
-    @Test
     public void test_downloadIqyFileForRequest_IllegalArgumentException() {
-        given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "loc"))
+        given(webQueryService.createWebQuery("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
                 .willThrow(new IllegalArgumentException("Error message"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
@@ -294,7 +277,7 @@ public class RateControllerTest {
 
     @Test
     public void test_downloadIqyFileForRequest_RuntimeException() {
-        given(iqyFileService.getIqyFileName("provider", "symbol", "currency", "loc"))
+        given(webQueryService.createWebQuery("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
                 .willThrow(new RuntimeException("Error message"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
