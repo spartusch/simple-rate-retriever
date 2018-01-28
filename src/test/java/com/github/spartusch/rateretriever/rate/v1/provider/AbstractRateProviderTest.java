@@ -57,21 +57,30 @@ public class AbstractRateProviderTest {
     @Test
     public void test_getUrl_redirect() {
         stubFor(get(urlEqualTo("/some/url"))
-                .willReturn(aResponse()
-                        .withStatus(302)
-                        .withHeader("Location", "/another/url")
-                        .withBody("not here")
-                ));
+                .willReturn(aResponse().withStatus(302).withHeader("Location", "/another/url").withBody("not here")));
         stubFor(get(urlEqualTo("/another/url"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withBody("response")
-                ));
+                .willReturn(aResponse().withStatus(200).withBody("response")));
 
         final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html", String.class);
 
         StepVerifier.create(response)
                 .expectNext("response")
+                .verifyComplete();
+    }
+
+    @Test
+    public void test_getUrl_redirectOnlyOnce() {
+        stubFor(get(urlEqualTo("/url1"))
+                .willReturn(aResponse().withStatus(302).withHeader("Location", "/url2").withBody("content1")));
+        stubFor(get(urlEqualTo("/url2"))
+                .willReturn(aResponse().withStatus(302).withHeader("Location", "/url3").withBody("content2")));
+        stubFor(get(urlEqualTo("/url3"))
+                .willReturn(aResponse().withStatus(200).withBody("content3")));
+
+        final Mono<String> response = provider.getUrl(wireMockRule.url("/url1"), "text/html", String.class);
+
+        StepVerifier.create(response)
+                .expectNext("content2")
                 .verifyComplete();
     }
 
