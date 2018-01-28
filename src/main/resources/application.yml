@@ -5,7 +5,7 @@ provider:
   coinMarketCap.baseUrl: "https://api.coinmarketcap.com"
   onVista.baseUrl: "https://www.onvista.de"
 
-logging.level.com.github.spartusch.rateretriever: DEBUG
+logging.level.com.github.spartusch.rateretriever: INFO
 
 spring:
     cache:

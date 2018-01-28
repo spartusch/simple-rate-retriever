@@ -54,12 +54,12 @@ public class OnVistaRateProvider extends AbstractRateProvider implements RatePro
                 .switchIfEmpty(
                         Mono.just(baseSearchUrl + symbol)
                                 // Search for the asset link
-                                .flatMap(searchUrl -> getUrl(searchUrl, MediaType.APPLICATION_JSON_VALUE))
+                                .flatMap(searchUrl -> getUrl(searchUrl, MediaType.APPLICATION_JSON_VALUE, String.class))
                                 .flatMap(searchResult -> extractPattern(assetPagePattern, searchResult, "Asset not found"))
                                 .doOnSuccess(url -> symbolToUrlCache.put(symbol, url))
                 )
                 // Retrieve the asset page
-                .flatMap(url -> getUrl(url, MediaType.TEXT_HTML_VALUE))
+                .flatMap(url -> getUrl(url, MediaType.TEXT_HTML_VALUE, String.class))
                 .doOnError(e -> symbolToUrlCache.remove(symbol))
                 .retry(1)
                 // Extract the amount

@@ -39,7 +39,7 @@ public class AbstractRateProviderTest {
                 .withHeader(HttpHeaders.USER_AGENT, matching("[a-zA-Z ]+"))
                 .willReturn(aResponse().withStatus(200).withBody("response")));
 
-        final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
+        final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html", String.class);
 
         StepVerifier.create(response)
                 .expectNext("response")
@@ -49,9 +49,30 @@ public class AbstractRateProviderTest {
     @Test
     public void test_getUrl_errorCase() {
         stubFor(get(urlEqualTo("/some/url")).willReturn(aResponse().withStatus(404)));
-        final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
+        final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html", String.class);
         StepVerifier.create(response)
                 .verifyErrorMatches(e -> e.getMessage().contains("Not Found"));
+    }
+
+    @Test
+    public void test_getUrl_redirect() {
+        stubFor(get(urlEqualTo("/some/url"))
+                .willReturn(aResponse()
+                        .withStatus(302)
+                        .withHeader("Location", "/another/url")
+                        .withBody("not here")
+                ));
+        stubFor(get(urlEqualTo("/another/url"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("response")
+                ));
+
+        final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html", String.class);
+
+        StepVerifier.create(response)
+                .expectNext("response")
+                .verifyComplete();
     }
 
     @Test

@@ -37,7 +37,7 @@ public class CoinMarketCapRateProvider extends AbstractRateProvider implements R
         return Mono.fromCallable(() ->
                     baseUrl + URL_PATH + symbol + "?" + "convert=" + currencyCode
                 )
-                .flatMap(url -> getUrl(url, MediaType.APPLICATION_JSON_VALUE))
+                .flatMap(url -> getUrl(url, MediaType.APPLICATION_JSON_VALUE, String.class))
                 .map(content -> {
                     final Matcher matcher = extractionPattern.matcher(content);
                     while (matcher.find()) {
