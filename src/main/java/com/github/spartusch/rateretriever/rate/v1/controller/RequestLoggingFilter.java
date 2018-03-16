@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class RequestLoggingFilter implements WebFilter {
 
-    private final static Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     @Override
     public Mono<Void> filter(final ServerWebExchange exchange, final WebFilterChain chain) {

@@ -18,6 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -253,9 +254,9 @@ public class RateControllerTest {
     //
 
     @Test
-    public void test_downloadIqyFileForRequest_happyCase() {
+    public void test_downloadIqyFileForRequest_happyCase() throws UnsupportedEncodingException {
         given(webQueryService.createWebQuery("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
-                .willReturn(new WebQuery("content".getBytes(), Charset.forName("UTF-8"), "filename.iqy"));
+                .willReturn(new WebQuery("content".getBytes("UTF-8"), Charset.forName("UTF-8"), "filename.iqy"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
                 .expectStatus().isOk()
