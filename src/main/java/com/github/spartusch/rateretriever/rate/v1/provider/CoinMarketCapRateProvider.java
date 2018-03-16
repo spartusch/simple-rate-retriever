@@ -1,5 +1,6 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
+import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -17,8 +18,6 @@ import java.util.regex.Pattern;
 @Repository(RateProviderType.COIN_MARKET)
 public class CoinMarketCapRateProvider extends AbstractRateProvider implements RateProvider {
 
-    private static final String URL_PATH = "/v1/ticker/";
-
     private final List<String> supportedCurrencies = Collections.unmodifiableList(Arrays.asList(
             "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR",
             "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD",
@@ -28,14 +27,14 @@ public class CoinMarketCapRateProvider extends AbstractRateProvider implements R
     private final String baseUrl;
 
     @Autowired
-    public CoinMarketCapRateProvider(@Value("${provider.coinMarketCap.baseUrl}") final String baseUrl) {
-        this.baseUrl = baseUrl;
+    public CoinMarketCapRateProvider(@Value("${provider.coinMarketCap.url}") final String url) {
+        this.baseUrl = url;
     }
 
     @Override
     public Mono<BigDecimal> getCurrentRate(final String symbol, final String currencyCode) {
         return Mono.fromCallable(() ->
-                    baseUrl + URL_PATH + symbol + "?" + "convert=" + currencyCode
+                    baseUrl + symbol + "/?" + "convert=" + currencyCode
                 )
                 .flatMap(url -> getUrl(url, MediaType.APPLICATION_JSON_VALUE, String.class))
                 .map(content -> {
@@ -46,7 +45,7 @@ public class CoinMarketCapRateProvider extends AbstractRateProvider implements R
                             return matcher.group(2);
                         }
                     }
-                    throw new RuntimeException("Amount not found");
+                    throw new DataExtractionException("Amount not found");
                 })
                 .flatMap(amount -> toBigDecimal(Locale.US, amount));
     }

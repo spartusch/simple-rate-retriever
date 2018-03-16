@@ -1,5 +1,6 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
+import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,8 +17,6 @@ import java.util.regex.Pattern;
 @Repository(RateProviderType.STOCK_EXCHANGE)
 public class OnVistaRateProvider extends AbstractRateProvider implements RateProvider {
 
-    private static final String URL_PATH = "/api/header/search?q=";
-
     private static final Pattern assetPagePattern = Pattern.compile("\"snapshotlink\":\"([^\"]+)\"");
     private static final Pattern amountPattern = Pattern.compile(
             "<span class=\"price\">([0-9,.]+) EUR</span>" +
@@ -29,8 +28,8 @@ public class OnVistaRateProvider extends AbstractRateProvider implements RatePro
     private final Map<String, String> symbolToUrlCache;
 
     @Autowired
-    public OnVistaRateProvider(@Value("${provider.onVista.baseUrl}") final String baseUrl) {
-        this.baseSearchUrl = baseUrl + URL_PATH;
+    public OnVistaRateProvider(@Value("${provider.onVista.url}") final String url) {
+        this.baseSearchUrl = url;
         this.symbolToUrlCache = new HashMap<>();
     }
 
@@ -44,7 +43,7 @@ public class OnVistaRateProvider extends AbstractRateProvider implements RatePro
                     }
                 }
             }
-            throw new RuntimeException(errorMessage);
+            throw new DataExtractionException(errorMessage);
         });
     }
 

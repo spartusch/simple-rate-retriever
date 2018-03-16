@@ -1,5 +1,6 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
+import com.github.spartusch.rateretriever.rate.v1.exception.WebRetrievalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -40,14 +41,14 @@ public abstract class AbstractRateProvider {
                             final URI redirectUri = new URI(url).resolve(locations.get(0));
                             return getUrl(redirectUri.toString(), accept);
                         } catch (final URISyntaxException e) {
-                            throw new RuntimeException(e);
+                            throw new IllegalArgumentException(e);
                         }
                     }
                     return Mono.just(clientResponse);
                 })
                 .doOnNext(clientResponse -> {
                     if (clientResponse.statusCode().isError()) {
-                        throw new RuntimeException(clientResponse.statusCode().getReasonPhrase());
+                        throw new WebRetrievalException(url, clientResponse.statusCode().getReasonPhrase());
                     }
                 })
                 .flatMap(clientResponse -> clientResponse.bodyToMono(clazz));
