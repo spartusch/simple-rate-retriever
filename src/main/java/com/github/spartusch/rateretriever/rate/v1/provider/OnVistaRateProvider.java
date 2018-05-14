@@ -29,13 +29,14 @@ public class OnVistaRateProvider extends AbstractRateProvider implements RatePro
 
     @Autowired
     public OnVistaRateProvider(@Value("${provider.onVista.url}") final String url) {
+        super(RateProviderType.STOCK_EXCHANGE);
         this.baseSearchUrl = url;
         this.symbolToUrlCache = new HashMap<>();
     }
 
     private Mono<String> extractPattern(final Pattern pattern, final String content, final String errorMessage) {
         return Mono.fromCallable(() -> {
-            final Matcher matcher = pattern.matcher(content);
+            final var matcher = pattern.matcher(content);
             if (matcher.find()) {
                 for (int i = 1; i <= matcher.groupCount(); i++) {
                     if (matcher.group(i) != null) {
@@ -53,12 +54,12 @@ public class OnVistaRateProvider extends AbstractRateProvider implements RatePro
                 .switchIfEmpty(
                         Mono.just(baseSearchUrl + symbol)
                                 // Search for the asset link
-                                .flatMap(searchUrl -> getUrl(searchUrl, MediaType.APPLICATION_JSON_VALUE, String.class))
+                                .flatMap(searchUrl -> getUrl(searchUrl, MediaType.APPLICATION_JSON_VALUE))
                                 .flatMap(searchResult -> extractPattern(assetPagePattern, searchResult, "Asset not found"))
                                 .doOnSuccess(url -> symbolToUrlCache.put(symbol, url))
                 )
                 // Retrieve the asset page
-                .flatMap(url -> getUrl(url, MediaType.TEXT_HTML_VALUE, String.class))
+                .flatMap(url -> getUrl(url, MediaType.TEXT_HTML_VALUE))
                 .doOnError(e -> symbolToUrlCache.remove(symbol))
                 .retry(1)
                 // Extract the amount

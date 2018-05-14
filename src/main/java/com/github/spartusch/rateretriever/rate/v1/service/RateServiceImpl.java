@@ -41,7 +41,7 @@ public class RateServiceImpl implements RateService {
                 })
                 .then(provider.getCurrentRate(symbol, currencyCode))
                 .map(rate -> {
-                    final NumberFormat numberFormat = DecimalFormat.getInstance(Locale.forLanguageTag(locale));
+                    final var numberFormat = DecimalFormat.getInstance(Locale.forLanguageTag(locale));
                     numberFormat.setMinimumFractionDigits(4);
                     return numberFormat.format(rate);
                 })

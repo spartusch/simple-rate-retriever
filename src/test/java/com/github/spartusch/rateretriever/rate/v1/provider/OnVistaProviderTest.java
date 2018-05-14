@@ -26,7 +26,7 @@ public class OnVistaProviderTest {
 
     @Before
     public void setUp() {
-        provider = new OnVistaRateProvider(wireMockRule.url(""));
+        provider = new OnVistaRateProvider(wireMockRule.url("/api/header/search?q="));
     }
 
     private void stubWithHtmlResponse(final String url, final int statusCode, final String response) {

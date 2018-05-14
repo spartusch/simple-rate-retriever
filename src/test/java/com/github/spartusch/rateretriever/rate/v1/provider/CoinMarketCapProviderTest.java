@@ -27,7 +27,7 @@ public class CoinMarketCapProviderTest {
 
     @Before
     public void setUp() {
-        provider = new CoinMarketCapRateProvider(wireMockRule.url(""));
+        provider = new CoinMarketCapRateProvider(wireMockRule.url("/v1/ticker/"));
     }
 
     private void stubWithJsonResponse(final String url, final int statusCode, final String response) {
@@ -45,7 +45,7 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_getCurrentRate_bitcoin_EUR_success() {
-        stubWithJsonResponse("/v1/ticker/bitcoin?convert=EUR",
+        stubWithJsonResponse("/v1/ticker/bitcoin/?convert=EUR",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\",\n\"price_eur\": \"11,230.7300\"\n}");
         final BigDecimal result = provider.getCurrentRate("bitcoin", "EUR").block();
@@ -54,7 +54,7 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_getCurrentRate_bitcoin_USD_success() {
-        stubWithJsonResponse("/v1/ticker/bitcoin?convert=USD",
+        stubWithJsonResponse("/v1/ticker/bitcoin/?convert=USD",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\",\n\"price_eur\": \"11,230.7300\"\n}");
         final BigDecimal result = provider.getCurrentRate("bitcoin", "USD").block();
@@ -63,7 +63,7 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_getCurrentRate_bitcoin_missing_currencyCode() {
-        stubWithJsonResponse("/v1/ticker/bitcoin?convert=",
+        stubWithJsonResponse("/v1/ticker/bitcoin/?convert=",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\"\n}");
         StepVerifier.create(provider.getCurrentRate("bitcoin", ""))
@@ -72,7 +72,7 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_getCurrentRate_bitcoin_unknown_currencyCode() {
-        stubWithJsonResponse("/v1/ticker/bitcoin?convert=XXX",
+        stubWithJsonResponse("/v1/ticker/bitcoin/?convert=XXX",
                 200,
                 "{\n\"price_usd\": \"14,150.1367\",\n}");
         StepVerifier.create(provider.getCurrentRate("bitcoin", "XXX"))
@@ -81,7 +81,7 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_getCurrentRate_unknown_symbol() {
-        stubWithJsonResponse("/v1/ticker/foobar?convert=EUR",
+        stubWithJsonResponse("/v1/ticker/foobar/?convert=EUR",
                 404,
                 "{\n \"error\": \"id not found\"\n}");
         StepVerifier.create(provider.getCurrentRate("foobar", "EUR"))
@@ -90,7 +90,7 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_getCurrentRate_serverError() {
-        stubWithJsonResponse("/v1/ticker/bitcoin?convert=EUR",
+        stubWithJsonResponse("/v1/ticker/bitcoin/?convert=EUR",
                 503,
                 "");
         StepVerifier.create(provider.getCurrentRate("bitcoin", "EUR"))
@@ -103,11 +103,9 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_isCurrencyCodeSupported_returnsTrueForAllSpecifiedByCoinMarketCapApi_upperCase() {
-        final List<String> supportedCurrencies = Collections.unmodifiableList(Arrays.asList(
-                "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR",
-                "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD",
-                "ZAR", "USD"
-        ));
+        final List<String> supportedCurrencies = List.of("AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK",
+                "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP",
+                "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD", "ZAR", "USD");
         for (final String currency : supportedCurrencies) {
             assertThat(provider.isCurrencyCodeSupported(currency).block()).isTrue();
         }
@@ -115,11 +113,9 @@ public class CoinMarketCapProviderTest {
 
     @Test
     public void test_isCurrencyCodeSupported_returnsTrueForAllSpecifiedByCoinMarketCapApi_lowerCase() {
-        final List<String> supportedCurrencies = Collections.unmodifiableList(Arrays.asList(
-                "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR",
-                "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD",
-                "ZAR", "USD"
-        ));
+        final List<String> supportedCurrencies = List.of("AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK",
+                "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP",
+                "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD", "ZAR", "USD");
         for (final String currency : supportedCurrencies) {
             assertThat(provider.isCurrencyCodeSupported(currency.toLowerCase()).block()).isTrue();
         }

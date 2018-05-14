@@ -8,26 +8,22 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Repository(RateProviderType.COIN_MARKET)
 public class CoinMarketCapRateProvider extends AbstractRateProvider implements RateProvider {
 
-    private final List<String> supportedCurrencies = Collections.unmodifiableList(Arrays.asList(
-            "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR",
-            "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD",
-            "ZAR", "USD"
-    ));
+    private final List<String> supportedCurrencies = List.of("AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK",
+            "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "MXN", "MYR", "NOK", "NZD",
+            "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD", "ZAR", "USD");
     private final Pattern extractionPattern = Pattern.compile("\"price_([a-z]+)\": \"([0-9.,]+)\"", Pattern.CASE_INSENSITIVE);
     private final String baseUrl;
 
     @Autowired
     public CoinMarketCapRateProvider(@Value("${provider.coinMarketCap.url}") final String url) {
+        super(RateProviderType.COIN_MARKET);
         this.baseUrl = url;
     }
 
@@ -36,9 +32,9 @@ public class CoinMarketCapRateProvider extends AbstractRateProvider implements R
         return Mono.fromCallable(() ->
                     baseUrl + symbol + "/?" + "convert=" + currencyCode
                 )
-                .flatMap(url -> getUrl(url, MediaType.APPLICATION_JSON_VALUE, String.class))
+                .flatMap(url -> getUrl(url, MediaType.APPLICATION_JSON_VALUE))
                 .map(content -> {
-                    final Matcher matcher = extractionPattern.matcher(content);
+                    final var matcher = extractionPattern.matcher(content);
                     while (matcher.find()) {
                         final String currencyCodeMatch = matcher.group(1);
                         if (currencyCodeMatch.equalsIgnoreCase(currencyCode)) {
