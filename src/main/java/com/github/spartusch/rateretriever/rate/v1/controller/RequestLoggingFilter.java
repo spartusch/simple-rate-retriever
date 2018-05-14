@@ -18,7 +18,7 @@ public class RequestLoggingFilter implements WebFilter {
 
     private final String suppressedUserAgent;
 
-    public RequestLoggingFilter(@Value("${requests.logging.suppressUserAgent}") final String suppressedUserAgent) {
+    public RequestLoggingFilter(@Value("${requests.logging.suppressUserAgent:}") final String suppressedUserAgent) {
         Objects.requireNonNull(suppressedUserAgent);
         log.info("Suppressing logs of requests by user agent: {}", suppressedUserAgent);
         this.suppressedUserAgent = suppressedUserAgent;
