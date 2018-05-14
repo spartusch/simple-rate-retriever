@@ -2,7 +2,7 @@ package com.github.spartusch.rateretriever.rate.v1.controller;
 
 import com.github.spartusch.rateretriever.rate.v1.service.RateService;
 import com.github.spartusch.webquery.WebQuery;
-import com.github.spartusch.webquery.WebQueryService;
+import com.github.spartusch.webquery.WebQueryFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class RateControllerTest {
     private RateService rateService;
 
     @MockBean
-    private WebQueryService webQueryService;
+    private WebQueryFactory webQueryFactory;
 
     //
     // getStockExchangeRate
@@ -155,7 +155,7 @@ public class RateControllerTest {
                 .returnResult(String.class);
 
         assertThat(result.getStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).startsWith("text/event-stream");
         StepVerifier.create(result.getResponseBody())
                 .expectNext("10.000,0000", "11.000,0000", "12.000,0000")
                 .thenCancel()
@@ -187,7 +187,7 @@ public class RateControllerTest {
                 .returnResult(String.class);
 
         assertThat(result.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).startsWith("text/event-stream");
         StepVerifier.create(result.getResponseBody())
                 .expectNext("Error message")
                 .verifyComplete();
@@ -211,7 +211,7 @@ public class RateControllerTest {
                 .returnResult(String.class);
 
         assertThat(result.getStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).startsWith("text/event-stream");
         StepVerifier.create(result.getResponseBody())
                 .expectNext("46,0000", "47,0000", "48,0000")
                 .thenCancel()
@@ -243,7 +243,7 @@ public class RateControllerTest {
                 .returnResult(String.class);
 
         assertThat(result.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).isEqualTo("text/event-stream");
+        assertThat(result.getResponseHeaders().get("Content-Type").get(0)).startsWith("text/event-stream");
         StepVerifier.create(result.getResponseBody())
                 .expectNext("Error message")
                 .verifyComplete();
@@ -255,20 +255,20 @@ public class RateControllerTest {
 
     @Test
     public void test_downloadIqyFileForRequest_happyCase() throws UnsupportedEncodingException {
-        given(webQueryService.createWebQuery("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
-                .willReturn(new WebQuery("content".getBytes("UTF-8"), Charset.forName("UTF-8"), "filename.iqy"));
+        given(webQueryFactory.create("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
+                .willReturn(new WebQuery("content", Charset.forName("UTF-8")));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentDisposition(ContentDisposition.parse("attachment; filename=symbol_CURRENCY.iqy"))
-                .expectHeader().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .expectHeader().contentType("text/plain; charset=UTF-8")
                 .expectHeader().contentLength("content".length())
                 .expectBody(String.class).isEqualTo("content");
     }
 
     @Test
     public void test_downloadIqyFileForRequest_IllegalArgumentException() {
-        given(webQueryService.createWebQuery("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
+        given(webQueryFactory.create("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
                 .willThrow(new IllegalArgumentException("Error message"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
@@ -278,7 +278,7 @@ public class RateControllerTest {
 
     @Test
     public void test_downloadIqyFileForRequest_RuntimeException() {
-        given(webQueryService.createWebQuery("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
+        given(webQueryFactory.create("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
                 .willThrow(new RuntimeException("Error message"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()

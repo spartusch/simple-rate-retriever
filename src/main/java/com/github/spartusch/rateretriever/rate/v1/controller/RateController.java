@@ -1,8 +1,7 @@
 package com.github.spartusch.rateretriever.rate.v1.controller;
 
 import com.github.spartusch.rateretriever.rate.v1.service.RateService;
-import com.github.spartusch.webquery.WebQuery;
-import com.github.spartusch.webquery.WebQueryService;
+import com.github.spartusch.webquery.WebQueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,36 +31,36 @@ public class RateController {
     private static final Logger log = LoggerFactory.getLogger(RateController.class);
 
     private final RateService rateService;
-    private final WebQueryService webQueryService;
+    private final WebQueryFactory webQueryFactory;
     private final Duration eventInterval;
 
     @Autowired
     public RateController(final RateService rateService,
-                          final WebQueryService webQueryService,
+                          final WebQueryFactory webQueryFactory,
                           @Value("${rate.events.interval:10000}") final int eventIntervalMillis) {
         this.rateService = rateService;
-        this.webQueryService = webQueryService;
+        this.webQueryFactory = webQueryFactory;
         this.eventInterval = Duration.ofMillis(eventIntervalMillis);
     }
 
     private <T> Consumer<T> logResponse() {
-        return r -> log.info("Response: '{}'", r);
+        return r -> log.debug("Response: '{}'", r);
     }
 
     @GetMapping(value = "/coinmarket/{symbol}/{currency}")
-    public Mono<String> getCoinMarketRate(@PathVariable("symbol") final String symbol,
-                                          @PathVariable("currency") final String currencyCode,
-                                          @RequestParam(value = "locale", defaultValue = DEFAULT_LOCALE) final String locale) {
-        return rateService.getCoinMarketRate(symbol, currencyCode, locale)
-                .doOnNext(logResponse());
+    public Mono<String> getCoinMarketRate(
+            @PathVariable("symbol") final String symbol,
+            @PathVariable("currency") final String currencyCode,
+            @RequestParam(value = "locale", defaultValue = DEFAULT_LOCALE) final String locale) {
+        return rateService.getCoinMarketRate(symbol, currencyCode, locale).doOnNext(logResponse());
     }
 
     @GetMapping(value = "/stockexchange/{symbol}/{currency}")
-    public Mono<String> getStockExchangeRate(@PathVariable("symbol") final String symbol,
-                                             @PathVariable("currency") final String currencyCode,
-                                             @RequestParam(value = "locale", defaultValue = DEFAULT_LOCALE) final String locale) {
-        return rateService.getStockExchangeRate(symbol, currencyCode, locale)
-                .doOnNext(logResponse());
+    public Mono<String> getStockExchangeRate(
+            @PathVariable("symbol") final String symbol,
+            @PathVariable("currency") final String currencyCode,
+            @RequestParam(value = "locale", defaultValue = DEFAULT_LOCALE) final String locale) {
+        return rateService.getStockExchangeRate(symbol, currencyCode, locale).doOnNext(logResponse());
     }
 
     @GetMapping(value = "/coinmarket/{symbol}/{currency}", produces = "text/event-stream")
@@ -87,13 +86,14 @@ public class RateController {
     }
 
     @GetMapping(value = "/{provider}/{symbol}/{currency}/iqy")
-    public HttpEntity<byte[]> downloadIqyFileForRequest(@PathVariable("provider") final String provider,
-                                                        @PathVariable("symbol") final String symbol,
-                                                        @PathVariable("currency") final String currencyCode,
-                                                        final ServerHttpRequest request) {
-        final WebQuery webQuery = webQueryService.createWebQuery(request.getURI().toString(), "/iqy");
-        webQuery.setFileName(String.format("%s_%s.iqy", symbol, currencyCode.toUpperCase()));
-        return webQuery.toHttpEntity();
+    public HttpEntity<byte[]> downloadIqyFileForRequest(
+            @PathVariable("provider") final String provider,
+            @PathVariable("symbol") final String symbol,
+            @PathVariable("currency") final String currencyCode,
+            final ServerHttpRequest request) {
+        final var webQuery = webQueryFactory.create(request.getURI().toString(), "/iqy");
+        final var fileName = String.format("%s_%s.iqy", symbol, currencyCode.toUpperCase());
+        return webQuery.toHttpEntity(fileName);
     }
 
     @ExceptionHandler
