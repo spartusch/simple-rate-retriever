@@ -1,62 +1,53 @@
 package com.github.spartusch.rateretriever.rate.v1.provider;
 
 import com.github.spartusch.rateretriever.rate.v1.exception.WebRetrievalException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Timer;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
+import org.apache.http.util.EntityUtils;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.NumberFormat;
-import java.util.List;
 import java.util.Locale;
 
 public abstract class AbstractRateProvider {
 
     private static final String USER_AGENT = "User Agent";
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractRateProvider.class);
+    private final Timer requestTimer;
 
-    private Mono<ClientResponse> getUrl(final String url, final String accept) {
-        return WebClient.create(url)
-                .get()
-                .accept(MediaType.parseMediaType(accept))
-                .header(HttpHeaders.USER_AGENT, USER_AGENT)
-                .exchange()
-                .doOnNext(response -> log.info("Fetching {}", url));
+    protected AbstractRateProvider(final String providerName) {
+        requestTimer = Metrics.timer("provider.requests", "provider.name", providerName);
     }
 
-    protected <T> Mono<T> getUrl(final String url, final String accept, final Class<T> clazz) {
-        return getUrl(url, accept)
-                .flatMap(clientResponse -> {
-                    // Follow redirects explicitly (cf. https://jira.spring.io/browse/SPR-16277)
-                    final List<String> locations = clientResponse.headers().header("Location");
-                    if (clientResponse.statusCode().is3xxRedirection() && !locations.isEmpty()) {
-                        try {
-                            final URI redirectUri = new URI(url).resolve(locations.get(0));
-                            return getUrl(redirectUri.toString(), accept);
-                        } catch (final URISyntaxException e) {
-                            throw new IllegalArgumentException(e);
-                        }
-                    }
-                    return Mono.just(clientResponse);
-                })
-                .doOnNext(clientResponse -> {
-                    if (clientResponse.statusCode().isError()) {
-                        throw new WebRetrievalException(url, clientResponse.statusCode().getReasonPhrase());
-                    }
-                })
-                .flatMap(clientResponse -> clientResponse.bodyToMono(clazz));
+    protected Mono<String> getUrl(final String url, final String accept) {
+        return Mono.fromCallable(requestTimer.wrap(() -> {
+            try {
+                return Request.Get(url).userAgent(USER_AGENT).setHeader(HttpHeaders.ACCEPT, accept).execute().returnResponse();
+            } catch (IOException e) {
+                throw new WebRetrievalException(url, e);
+            }
+        })).doOnNext(response -> {
+            if (response.getStatusLine().getStatusCode() >= 400) {
+                throw new WebRetrievalException(url, response.getStatusLine().toString());
+            }
+        }).map(response -> {
+            try {
+                final var entity = response.getEntity();
+                return EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset());
+            } catch (IOException e) {
+                throw new WebRetrievalException(url, e);
+            }
+        });
     }
 
     protected Mono<BigDecimal> toBigDecimal(final Locale locale, final String amount) {
         return Mono.fromCallable(() -> {
-            final NumberFormat numberFormat = NumberFormat.getInstance(locale);
+            final var numberFormat = NumberFormat.getInstance(locale);
             return new BigDecimal(numberFormat.parse(amount).toString());
         });
     }
