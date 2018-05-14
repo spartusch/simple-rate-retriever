@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '2.0.0.RELEASE'
+        springBootVersion = '2.0.2.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -16,22 +16,28 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.github.spartusch'
 version = '1.1.0-SNAPSHOT'
-sourceCompatibility = 1.8
+
+sourceCompatibility = 10
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url "https://repo.spring.io/milestone" }
 }
 
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-webflux'
+    compile 'org.apache.httpcomponents:fluent-hc:4.5.5'
+    // Monitoring
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+    compile 'io.micrometer:micrometer-registry-prometheus:latest.release'
+    // Caching
     compile 'org.springframework.boot:spring-boot-starter-cache'
     compile 'com.github.ben-manes.caffeine:caffeine:2.6.2'
-    compile 'com.github.spartusch:excel-web-query-service:1.0-SNAPSHOT'
+    // Custom
+    compile 'com.github.spartusch:excel-web-query:1.0-SNAPSHOT'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
-    testCompile 'com.github.tomakehurst:wiremock-standalone:2.15.0'
+    testCompile 'com.github.tomakehurst:wiremock-standalone:2.17.0'
     testCompile 'io.projectreactor:reactor-test'
 }
 
