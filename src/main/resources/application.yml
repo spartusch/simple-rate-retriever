@@ -20,6 +20,4 @@ provider:
   coinMarketCap.url: "https://api.coinmarketcap.com/v1/ticker/"
   onVista.url: "https://www.onvista.de/api/header/search?q="
 
-logging.level.wiremock: INFO
-logging.level.com.github.spartusch.rateretriever: INFO
 requests.logging.suppressUserAgent: Prometheus
