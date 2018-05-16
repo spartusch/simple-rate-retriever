@@ -15,7 +15,7 @@ public class WebRetrievalException extends RuntimeException {
     }
 
     public WebRetrievalException(final String requestUrl, final Throwable cause) {
-        super(requestUrl, cause);
+        super(requestUrl + ": " + cause.getMessage(), cause);
         this.requestUrl = requestUrl;
     }
 
