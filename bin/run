@@ -1,4 +1,4 @@
 #!/bin/sh
 
 ./gradlew bootJar
-java -Dserver.port=18091 -jar build/libs/simple-rate-retriever*.jar
+java -Dspring.boot.admin.client.url='http://localhost:18000' -jar build/libs/simple-rate-retriever*.jar

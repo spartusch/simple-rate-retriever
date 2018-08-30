@@ -6,6 +6,7 @@ project_name='simple-rate-retriever'
 deploy_dir='/home/pi/deploy/simple-rate-retriever'
 repo_dir='/home/pi/repos/simple-rate-retriever.git'
 server_port=18091
+admin_server='http://localhost:18000'
 
 while read oldrev newrev ref
 do
@@ -31,7 +32,7 @@ do
 		echo
 		jar_file=$deploy_dir/build/libs/$project_name*.jar
 		echo "=> Starting new instance ("$(basename $jar_file)") on port $server_port..."
-		nohup java -Dserver.port=$server_port -jar $jar_file &>$deploy_dir/output &
+		nohup java -Dserver.port=$server_port -Dspring.boot.admin.client.url=$admin_server -jar $jar_file &>$deploy_dir/output &
 
 		echo "=> Done"
     else
