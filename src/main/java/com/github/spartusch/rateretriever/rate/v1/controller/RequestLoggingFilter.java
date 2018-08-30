@@ -16,21 +16,29 @@ public class RequestLoggingFilter implements WebFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
-    private final String suppressedUserAgent;
+    private final boolean enabled;
+    private final String excludePath;
 
-    public RequestLoggingFilter(@Value("${requests.logging.suppressUserAgent:}") final String suppressedUserAgent) {
-        Objects.requireNonNull(suppressedUserAgent);
-        log.info("Suppressing logs of requests by user agent: {}", suppressedUserAgent);
-        this.suppressedUserAgent = suppressedUserAgent;
+    public RequestLoggingFilter(
+            @Value("${requestloggingfilter.enabled:true}") final boolean enabled,
+            @Value("${requestloggingfilter.exclude.path:}") final String excludePath) {
+        Objects.requireNonNull(excludePath);
+        log.info("Request logging is enabled: {}", enabled);
+        if (enabled) {
+            log.info("Request path excluded from request logging: {}", excludePath);
+        }
+        this.enabled = enabled;
+        this.excludePath = excludePath;
     }
 
     @Override
     public Mono<Void> filter(final ServerWebExchange exchange, final WebFilterChain chain) {
-        final var headers = exchange.getRequest().getHeaders();
-        final var userAgent = headers.getFirst("User-Agent");
-        if (userAgent.isEmpty() || !userAgent.startsWith(suppressedUserAgent)) {
-            log.info("Request: {}", exchange.getRequest().getURI());
-            log.debug("Headers: {}", headers);
+        if (enabled) {
+            final var path = exchange.getRequest().getPath().pathWithinApplication().value();
+            if (!path.startsWith(excludePath)) {
+                log.info("Request: {}", exchange.getRequest().getURI());
+                log.debug("Headers: {}", exchange.getRequest().getHeaders());
+            }
         }
         return chain.filter(exchange);
     }

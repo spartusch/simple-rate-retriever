@@ -1,5 +1,5 @@
 
-server.port: 8090
+server.port: 18091
 
 spring:
   application.name: simple-rate-retriever
@@ -11,13 +11,14 @@ spring:
 management:
   security.enabled: false
   endpoints:
-    web.exposure.include: 'health, metrics, prometheus'
+    web.exposure.include: '*'
   distribution:
     percentiles-histogram:
       http.server.requests: true
 
 provider:
-  coinMarketCap.url: "https://api.coinmarketcap.com/v1/ticker/"
-  onVista.url: "https://www.onvista.de/api/header/search?q="
+  coinMarketCap.url: 'https://api.coinmarketcap.com/v1/ticker/'
+  onVista.url: 'https://www.onvista.de/api/header/search?q='
 
-requests.logging.suppressUserAgent: Prometheus
+requestloggingfilter.exclude.path: '/actuator'
+logging.file: simple-rate-retriever.log

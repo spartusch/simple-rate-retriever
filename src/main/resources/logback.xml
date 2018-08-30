@@ -1,7 +1,21 @@
 <configuration>
+    <property resource="application.yml"/>
+
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d %level: %message%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="logfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.file}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logging.file}.%d{yyyy-MM}</fileNamePattern>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>5MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d [%thread] %level %logger{35}: %message%n</pattern>
         </encoder>
     </appender>
 
@@ -9,5 +23,6 @@
 
     <root level="info">
         <appender-ref ref="stdout"/>
+        <appender-ref ref="logfile"/>
     </root>
 </configuration>
