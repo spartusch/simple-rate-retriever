@@ -10,6 +10,7 @@ spring:
 
 management:
   security.enabled: false
+  info.git.mode: full
   endpoints:
     web.exposure.include: '*'
   distribution:
