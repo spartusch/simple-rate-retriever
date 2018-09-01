@@ -7,6 +7,6 @@ scrape_configs:
   - job_name: 'simple-rate-retriever'
     metrics_path: '/actuator/prometheus'
     static_configs:
-    - targets: ['localhost:8090']
+    - targets: ['localhost:18091']
       labels:
         application: simple-rate-retriever
