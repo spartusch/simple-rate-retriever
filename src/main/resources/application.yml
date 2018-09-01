@@ -13,6 +13,7 @@ management:
   info.git.mode: full
   endpoints:
     web.exposure.include: '*'
+    shutdown.enabled: true
   distribution:
     percentiles-histogram:
       http.server.requests: true
