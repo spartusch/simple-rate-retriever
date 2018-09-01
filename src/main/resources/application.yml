@@ -12,7 +12,6 @@ management:
   security.enabled: false
   endpoints:
     web.exposure.include: '*'
-    shutdown.enabled: true
   distribution:
     percentiles-histogram:
       http.server.requests: true
