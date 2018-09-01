@@ -13,7 +13,11 @@ do
     if [[ $ref =~ .*/master$ ]];
     then
         echo "=> Deploying master branch..."
-		git --work-tree=$deploy_dir --git-dir=$repo_dir checkout -f
+        if [ -d $deploy_dir ];
+        then
+            rm -rf $deploy_dir
+        fi
+		git clone --local --branch master $repo_dir $deploy_dir
 
 		echo
 		pid=$(ps aux | egrep '[j]ava .+/'$project_name'.*\.jar' | awk '{print $2}')
