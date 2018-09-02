@@ -5,8 +5,9 @@
 project_name='simple-rate-retriever'
 deploy_dir='/home/pi/deploy/simple-rate-retriever'
 repo_dir='/home/pi/repos/simple-rate-retriever.git'
+network='com.github.spartusch'
 server_port=18091
-admin_server='http://localhost:18000'
+admin_server='http://admin-server:18000'
 
 while read oldrev newrev ref
 do
@@ -36,7 +37,7 @@ do
             && docker run -p$server_port:$server_port \
                       -e SERVER_PORT=$server_port \
                       -e ADMIN_SERVER=$admin_server \
-                      -d --rm --name $project_name $project_name':latest'
+                      -d --rm --network $network --name $project_name $project_name':latest'
 
         echo
         echo "=> Cleaning up...";
