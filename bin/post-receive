@@ -19,25 +19,35 @@ do
         fi
 		git clone --local --branch master $repo_dir $deploy_dir
 
-		echo
-		pid=$(ps aux | egrep '[j]ava .+/'$project_name'.*\.jar' | awk '{print $2}')
-		if [ -z $pid ];
-		then
-			echo "=> No running instance detected";
-		else
-			echo "=> Killing running instance (pid: $pid)...";
-			kill $pid
-		fi
+        echo
+		container_id=$(docker ps --filter name=$project_name --format '{{.ID}}');
+        if [ -z $container_id ];
+        then
+            echo "=> No running container detected";
+        else
+            echo "=> Stopping running container (id: $container_id)...";
+        	docker stop $container_id;
+        fi
 
-		echo
-		echo "=> Building deployed master branch..."
-		$deploy_dir/gradlew -p $deploy_dir clean bootJar
+        echo
+		echo "=> Building master branch..."
+		docker image build -t $project_name':latest' $deploy_dir \
+		    && echo && echo "=> Starting new container on port $server_port..." \
+            && docker run -p$server_port:$server_port \
+                      -e SERVER_PORT=$server_port \
+                      -e ADMIN_SERVER=$admin_server \
+                      -d --rm --name $project_name $project_name':latest'
 
-		echo
-		jar_file=$deploy_dir/build/libs/$project_name*.jar
-		echo "=> Starting new instance ("$(basename $jar_file)") on port $server_port..."
-		nohup java -Dserver.port=$server_port -Dspring.boot.admin.client.url=$admin_server -jar $jar_file &>$deploy_dir/output &
+        echo
+        echo "=> Cleaning up...";
+        docker container prune -f \
+            && docker image prune -f
 
+        echo
+        echo "=> Current resource usage:";
+        docker system df
+
+        echo
 		echo "=> Done"
     else
         echo "Ref $ref received successfully. Doing nothing: only the master branch will be deployed on this server."
