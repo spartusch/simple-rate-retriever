@@ -105,7 +105,7 @@ public class OnVistaProviderTest {
         stubWithHtmlResponse("/api/header/search?q=foo", 404, "");
 
         StepVerifier.create(provider.getCurrentRate("foo", "EUR"))
-                .verifyErrorMatches(e -> e.getMessage().contains("Not Found"));
+                .verifyErrorMatches(e -> e.getMessage().contains("404"));
 
         verify(2, getRequestedFor(urlEqualTo("/api/header/search?q=foo")));
     }
@@ -117,7 +117,7 @@ public class OnVistaProviderTest {
         stubWithHtmlResponse("/some/url/for/foo", 404, "");
 
         StepVerifier.create(provider.getCurrentRate("foo", "EUR"))
-                .verifyErrorMatches(e -> e.getMessage().contains("Not Found"));
+                .verifyErrorMatches(e -> e.getMessage().contains("404"));
 
         verify(2, getRequestedFor(urlEqualTo("/api/header/search?q=foo")));
         verify(2, getRequestedFor(urlEqualTo("/some/url/for/foo")));

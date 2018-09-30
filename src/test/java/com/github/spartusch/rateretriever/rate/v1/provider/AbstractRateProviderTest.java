@@ -51,7 +51,7 @@ public class AbstractRateProviderTest {
         stubFor(get(urlEqualTo("/some/url")).willReturn(aResponse().withStatus(404)));
         final Mono<String> response = provider.getUrl(wireMockRule.url("/some/url"), "text/html");
         StepVerifier.create(response)
-                .verifyErrorMatches(e -> e.getMessage().contains("Not Found"));
+                .verifyErrorMatches(e -> e.getMessage().contains("404"));
     }
 
     @Test
