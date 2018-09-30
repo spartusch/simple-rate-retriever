@@ -29,7 +29,7 @@ public class AbstractRateProviderTest {
 
     @Before
     public void setUp() {
-        provider = new AbstractRateProvider("") {};
+        provider = new SimpleProvider();
     }
 
     @Test
