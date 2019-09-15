@@ -5,8 +5,8 @@ buildscript {
         maven { url 'https://plugins.gradle.org/m2/' }
     }
     dependencies {
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.1.1.RELEASE'
-        classpath 'gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:1.5.2'
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.1.8.RELEASE'
+        classpath 'gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.1.0'
     }
 }
 
@@ -31,18 +31,18 @@ dependencies {
     // Monitoring
     compile 'io.micrometer:micrometer-registry-prometheus'
     runtime 'org.springframework.boot:spring-boot-starter-actuator'
-    runtime 'de.codecentric:spring-boot-admin-starter-client:2.1.1'
+    runtime 'de.codecentric:spring-boot-admin-starter-client:2.1.6'
 
     // Caching
     compile 'org.springframework.boot:spring-boot-starter-cache'
-    compile 'com.github.ben-manes.caffeine:caffeine:2.6.2'
+    compile 'com.github.ben-manes.caffeine:caffeine:2.8.0'
 
     // Custom
     compile 'com.github.spartusch:excel-web-query:1.0-SNAPSHOT'
 
     // Tests
     testCompile 'org.springframework.boot:spring-boot-starter-test'
-    testCompile 'com.github.tomakehurst:wiremock-standalone:2.19.0'
+    testCompile 'com.github.tomakehurst:wiremock-standalone:2.24.1'
     testCompile 'io.projectreactor:reactor-test'
 }
 
