@@ -1,14 +1,15 @@
 package com.github.spartusch.rateretriever.rate.v1.controller;
 
 import com.github.spartusch.rateretriever.rate.v1.service.RateService;
-import com.github.spartusch.webquery.WebQuery;
-import com.github.spartusch.webquery.WebQueryFactory;
+import com.github.spartusch.rateretriever.rate.v1.service.WebQueryService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
@@ -19,7 +20,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -41,7 +41,7 @@ public class RateControllerTest {
     private RateService rateService;
 
     @MockBean
-    private WebQueryFactory webQueryFactory;
+    private WebQueryService webQueryService;
 
     //
     // getStockExchangeRate
@@ -254,35 +254,35 @@ public class RateControllerTest {
     //
 
     @Test
-    public void test_downloadIqyFileForRequest_happyCase() throws UnsupportedEncodingException {
-        given(webQueryFactory.create("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
-                .willReturn(new WebQuery("content", Charset.forName("UTF-8")));
+    public void test_downloadIqyFileForRequest_happyCase() {
+        final var headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "contentDisposition");
+        given(webQueryService.getWebQueryEntity("/rate/v1/provider/symbol/currency?locale=loc", "symbol", "currency"))
+                .willReturn(new HttpEntity<>(null, headers));
+
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().contentDisposition(ContentDisposition.parse("attachment; filename=symbol_CURRENCY.iqy"))
-                .expectHeader().contentType("text/plain; charset=UTF-8")
-                .expectHeader().contentLength("content".length())
-                .expectBody(String.class).isEqualTo("content");
+                .expectHeader().contentDisposition(ContentDisposition.parse("contentDisposition")) ;
     }
 
     @Test
     public void test_downloadIqyFileForRequest_IllegalArgumentException() {
-        given(webQueryFactory.create("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
-                .willThrow(new IllegalArgumentException("Error message"));
+        given(webQueryService.getWebQueryEntity("/rate/v1/provider/symbol/currency?locale=loc", "symbol", "currency"))
+                .willThrow(new IllegalArgumentException("Error message1"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
                 .expectStatus().isBadRequest()
-                .expectBody(String.class).isEqualTo("Error message");
+                .expectBody(String.class).isEqualTo("Error message1");
     }
 
     @Test
     public void test_downloadIqyFileForRequest_RuntimeException() {
-        given(webQueryFactory.create("/rate/v1/provider/symbol/currency/iqy?locale=loc", "/iqy"))
-                .willThrow(new RuntimeException("Error message"));
+        given(webQueryService.getWebQueryEntity("/rate/v1/provider/symbol/currency?locale=loc", "symbol", "currency"))
+                .willThrow(new RuntimeException("Error message2"));
         webTestClient.get().uri("/rate/v1/provider/symbol/currency/iqy?locale=loc")
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
-                .expectBody(String.class).isEqualTo("Error message");
+                .expectBody(String.class).isEqualTo("Error message2");
     }
 }

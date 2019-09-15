@@ -1,7 +1,7 @@
 package com.github.spartusch.rateretriever.rate.v1.controller;
 
 import com.github.spartusch.rateretriever.rate.v1.service.RateService;
-import com.github.spartusch.webquery.WebQueryFactory;
+import com.github.spartusch.rateretriever.rate.v1.service.WebQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +31,15 @@ public class RateController {
     private static final Logger log = LoggerFactory.getLogger(RateController.class);
 
     private final RateService rateService;
-    private final WebQueryFactory webQueryFactory;
+    private final WebQueryService webQueryService;
     private final Duration eventInterval;
 
     @Autowired
     public RateController(final RateService rateService,
-                          final WebQueryFactory webQueryFactory,
+                          final WebQueryService webQueryService,
                           @Value("${rate.events.interval:10000}") final int eventIntervalMillis) {
         this.rateService = rateService;
-        this.webQueryFactory = webQueryFactory;
+        this.webQueryService = webQueryService;
         this.eventInterval = Duration.ofMillis(eventIntervalMillis);
     }
 
@@ -91,22 +91,23 @@ public class RateController {
             @PathVariable("symbol") final String symbol,
             @PathVariable("currency") final String currencyCode,
             final ServerHttpRequest request) {
-        final var webQuery = webQueryFactory.create(request.getURI().toString(), "/iqy");
-        final var fileName = String.format("%s_%s.iqy", symbol, currencyCode.toUpperCase());
-        return webQuery.toHttpEntity(fileName);
+        return webQueryService.getWebQueryEntity(
+                request.getURI().toString().replaceAll("/iqy", ""),
+                symbol,
+                currencyCode);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleException(final IllegalArgumentException e) {
-        log.error("Bad Request: {}", e);
+        log.error("Bad Request", e);
         return e.getMessage();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleException(final RuntimeException e) {
-        log.error("Internal Server Error: {}", e);
+        log.error("Internal Server Error", e);
         return e.getMessage();
     }
 }
