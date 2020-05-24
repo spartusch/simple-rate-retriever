@@ -18,15 +18,14 @@ object Versions {
         const val wiremockExtension = "0.4.0"
     }
 
-    const val jvmTarget = "1.8"
+    const val jvmTarget = "11"
     const val projectVersion = "2.0.0-SNAPSHOT"
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
-    maven { url = uri("https://spartusch.github.io/mvn-repo") }
+    maven { url = uri("https://jitpack.io") } // required for com.github.JensPiegsa:wiremock-extension
 }
 
 dependencies {
