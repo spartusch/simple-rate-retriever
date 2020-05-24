@@ -1,16 +1,16 @@
 <configuration>
-    <property resource="application.yml"/>
+    <property name="logFile" value="simple-rate-retriever.log"/>
 
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="stdoutAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d %level: %message%n</pattern>
         </encoder>
     </appender>
 
-    <appender name="logfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${logging.file}</file>
+    <appender name="logFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logFile}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.file}.%d{yyyy-MM}</fileNamePattern>
+            <fileNamePattern>${logFile}.%d{yyyy-MM}</fileNamePattern>
             <maxHistory>90</maxHistory>
             <totalSizeCap>5MB</totalSizeCap>
         </rollingPolicy>
@@ -22,7 +22,7 @@
     <logger name="com.github.spartusch.rateretriever" level="info"/>
 
     <root level="info">
-        <appender-ref ref="stdout"/>
-        <appender-ref ref="logfile"/>
+        <appender-ref ref="stdoutAppender"/>
+        <appender-ref ref="logFileAppender"/>
     </root>
 </configuration>

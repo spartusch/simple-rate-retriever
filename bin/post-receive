@@ -2,55 +2,24 @@
 
 # Copy this file to .git/hooks to enable this post-receive hook
 
-project_name='simple-rate-retriever'
 deploy_dir='/home/pi/deploy/simple-rate-retriever'
 repo_dir='/home/pi/repos/simple-rate-retriever.git'
-network='com.github.spartusch'
-server_port=18091
-admin_server='http://admin-server:18000'
 
 while read oldrev newrev ref
 do
-    if [[ $ref =~ .*/master$ ]];
+  if [[ $ref =~ .*/master$ ]];
+  then
+    echo "=> Deploying master branch ..."
+
+    if [ -d $deploy_dir ];
     then
-        echo "=> Deploying master branch..."
-        if [ -d $deploy_dir ];
-        then
-            rm -rf $deploy_dir
-        fi
-		git clone --local --branch master $repo_dir $deploy_dir
-
-        echo
-		container_id=$(docker ps --filter name=$project_name --format '{{.ID}}');
-        if [ -z $container_id ];
-        then
-            echo "=> No running container detected";
-        else
-            echo "=> Stopping running container (id: $container_id)...";
-        	docker stop $container_id;
-        fi
-
-        echo
-		echo "=> Building master branch..."
-		docker image build -t $project_name':latest' $deploy_dir \
-		    && echo && echo "=> Starting new container on port $server_port..." \
-            && docker run -p$server_port:$server_port \
-                      -e SERVER_PORT=$server_port \
-                      -e ADMIN_SERVER=$admin_server \
-                      -d --rm --network $network --name $project_name $project_name':latest'
-
-        echo
-        echo "=> Cleaning up...";
-        docker container prune -f \
-            && docker image prune -f
-
-        echo
-        echo "=> Current resource usage:";
-        docker system df
-
-        echo
-		echo "=> Done"
-    else
-        echo "Ref $ref received successfully. Doing nothing: only the master branch will be deployed on this server."
+      rm -rf $deploy_dir
     fi
+
+		git clone --local --branch master $repo_dir $deploy_dir
+    cd $deploy_dir
+		bin/run-container
+	else
+	  echo "Branch $ref received successfully. Doing nothing: Only the master branch will be deployed."
+  fi
 done

@@ -4,9 +4,6 @@ server.port: 18091
 spring:
   application.name: simple-rate-retriever
   metrics.prometheus.enabled: true
-  cache:
-    cache-names: StockExchangeRateCache, CoinMarketRateCache
-    caffeine.spec: expireAfterWrite=60s
 
 management:
   security.enabled: false
@@ -16,9 +13,12 @@ management:
     percentiles-histogram:
       http.server.requests: true
 
-provider:
-  coinMarketCap.url: 'https://api.coinmarketcap.com/v1/ticker/'
-  onVista.url: 'https://www.onvista.de/api/header/search?q='
+simple-rate-retriever:
+  request-logging-filter.exclude: '/actuator'
+  provider:
+    coin-market-cap.uri: 'https://api.coinmarketcap.com/v1/ticker/'
+    on-vista.uri: 'https://www.onvista.de/api/header/search?q='
 
-requestloggingfilter.exclude.path: '/actuator'
-logging.file: simple-rate-retriever.log
+logging:
+  level:
+    org.springframework.web: INFO
