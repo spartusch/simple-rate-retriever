@@ -18,7 +18,7 @@ do
 
 		git clone --local --branch master $repo_dir $deploy_dir
     cd $deploy_dir
-		bin/run-container
+		bin/run-container.sh
 	else
 	  echo "Branch $ref received successfully. Doing nothing: Only the master branch will be deployed."
   fi

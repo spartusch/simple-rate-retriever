@@ -21,7 +21,7 @@ if [ -z $container_id ];
 	  echo
 fi
 
-echo "=> Building image '$project_group/$project_name' ..."
+echo "=> Building image '$project_group/$project_name' (might take a while) ..."
 
 ./gradlew bootBuildImage > /dev/null
 echo
