@@ -59,20 +59,21 @@ tasks {
         kotlinOptions.jvmTarget = Versions.jvmTarget
     }
 
+    test {
+        useJUnitPlatform()
+        testLogging.events("started", "skipped", "failed")
+    }
+
     bootJar {
-        // Setting launchScript breaks bootBuildImage
-        if (!project.gradle.startParameter.taskNames.contains("bootBuildImage")) {
+        if (project.hasProperty("generateLaunchScript")) {
             launchScript()
         }
         layered()
     }
 
-    bootBuildImage {
-        imageName = "${project.group}/${project.name}:latest"
-    }
-
-    test {
-        useJUnitPlatform()
-        testLogging.events("started", "skipped", "failed")
+    register<Exec>("dockerImage") {
+        dependsOn(bootJar)
+        val name = "${project.group}/${project.name}"
+        commandLine = listOf("docker", "image", "build", "-t", "$name:${project.version}", "-t", "$name:latest", ".")
     }
 }

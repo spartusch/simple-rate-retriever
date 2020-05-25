@@ -2,7 +2,7 @@
 
 project_name='simple-rate-retriever'
 project_group='com.github.spartusch'
-project_port=18091
+port=18091
 
 admin_server='http://admin-server:18000'
 
@@ -22,8 +22,7 @@ if [ -z $container_id ];
 fi
 
 echo "=> Building image '$project_group/$project_name' (might take a while) ..."
-
-./gradlew bootBuildImage > /dev/null
+./gradlew dockerImage > /dev/null
 echo
 
 if [[ ! $(docker network ls | grep $project_group) ]];
@@ -36,12 +35,11 @@ if [[ ! $(docker network ls | grep $project_group) ]];
     echo
 fi
 
-echo "=> Starting new container '$project_name' on port $project_port ..."
-docker run -p$project_port:$project_port \
-    -e server.port=$project_port \
-    -e spring.boot.admin.client.url=$admin_server \
-    -d --rm --network $project_group --name $project_name \
-    $project_group'/'$project_name':latest' > /dev/null
+echo "=> Starting new container '$project_name' to be available at port $port ..."
+docker run -p$port:8080 \
+  -e spring.boot.admin.client.url=$admin_server \
+  -d --rm --network $project_group --name $project_name \
+  $project_group'/'$project_name':latest' > /dev/null
 
 echo
 echo "=> Cleaning up ...";
