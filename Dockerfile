@@ -1,10 +1,10 @@
-FROM openjdk:11-jre-slim as builder
+FROM adoptopenjdk:11-jre-hotspot as builder
 WORKDIR application
 COPY build/libs/*.jar application/
 RUN java -Djarmode=layertools -jar application/*.jar extract
 RUN rm application/*.jar
 
-FROM openjdk:11-jre-slim
+FROM adoptopenjdk:11-jre-hotspot
 EXPOSE 8080
 ENV server.port 8080
 WORKDIR application
