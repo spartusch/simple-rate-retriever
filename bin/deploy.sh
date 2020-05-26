@@ -1,10 +1,6 @@
 #!/bin/bash
 
-project_name='simple-rate-retriever'
-project_group='com.github.spartusch'
-port=18091
-
-admin_server='http://admin-server:18000'
+declare $(env -i `cat bin/configuration.vars`)
 image=$project_group'/'$project_name':latest'
 
 while getopts 'u:h:i:' argument

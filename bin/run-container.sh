@@ -1,10 +1,6 @@
 #!/bin/bash
 
-project_name='simple-rate-retriever'
-project_group='com.github.spartusch'
-port=18091
-
-admin_server='http://admin-server:18000'
+declare $(env -i `cat bin/configuration.vars`)
 
 echo
 echo "=> Starting to build and run '$project_group/$project_name' ..."
