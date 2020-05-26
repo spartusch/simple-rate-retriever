@@ -10,14 +10,14 @@ echo
 echo "=> Starting to build and run '$project_group/$project_name' ..."
 echo
 
-container_id=$(docker ps --filter name=$project_name --format '{{.ID}}');
+container_id=$(docker ps -a --filter name=$project_name --format '{{.ID}}');
 if [ -z $container_id ];
   then
     echo "=> Container '$project_name' is not running";
     echo
 	else
-	  echo "=> Stopping existing container '$project_name' ...";
-	  docker stop $container_id > /dev/null;
+	  echo "=> Stopping and removing existing container '$project_name' ...";
+	  docker stop $container_id > /dev/null && docker container rm $container_id > /dev/null;
 	  echo
 fi
 
@@ -38,7 +38,7 @@ fi
 echo "=> Starting new container '$project_name' to be available at port $port ..."
 docker run -p$port:8080 \
   -e spring.boot.admin.client.url=$admin_server \
-  -d --rm --network $project_group --name $project_name \
+  -d --network $project_group --name $project_name \
   $project_group'/'$project_name':latest' > /dev/null
 
 echo
