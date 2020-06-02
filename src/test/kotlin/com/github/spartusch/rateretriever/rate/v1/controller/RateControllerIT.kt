@@ -76,6 +76,18 @@ class RateControllerIT {
     }
 
     @Test
+    fun getCurrentRate_NotFoundException() {
+        given(rateService.getCurrentRate("provider", "xxx", "yyy", "en-US"))
+            .willThrow(NotFoundException("err_msg"))
+
+        val result = mockMvc.perform(get("/rate/v1/provider/xxx/yyy"))
+            .andExpect(status().isNotFound)
+            .andReturn()
+
+        assertThat(result.response.contentAsString).contains("err_msg")
+    }
+
+    @Test
     fun getCurrentRate_RuntimeException() {
         given(rateService.getCurrentRate("provider", "xxx", "yyy", "en-US"))
                 .willThrow(java.lang.RuntimeException("err_msg"))
@@ -94,7 +106,8 @@ class RateControllerIT {
         val headers = HttpHeaders()
         headers[HttpHeaders.CONTENT_DISPOSITION] = "contentDisposition"
         headers[HttpHeaders.CONTENT_TYPE] = MediaType.APPLICATION_OCTET_STREAM_VALUE
-        given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=loc", "symbol", "currency"))
+        given(rateService.isRegisteredProviderOrThrow("provider")).willReturn(true)
+        given(webQueryService.getWebQueryEntity("/rate/v1/provider/sym/currency/?locale=loc", "sym", "currency"))
                 .willReturn(HttpEntity("test".toByteArray(), headers))
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy?locale=loc"))
@@ -108,7 +121,8 @@ class RateControllerIT {
 
     @Test
     fun downloadIqyFileForRequest_missingLocaleDefaultsToUs() {
-        given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=en-US", "symbol", "currency"))
+        given(rateService.isRegisteredProviderOrThrow("provider")).willReturn(true)
+        given(webQueryService.getWebQueryEntity("/rate/v1/provider/sym/currency/?locale=en-US", "sym", "currency"))
                 .willReturn(HttpEntity("test".toByteArray(), HttpHeaders()))
 
         mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy"))
@@ -127,7 +141,8 @@ class RateControllerIT {
 
     @Test
     fun downloadIqyFileForRequest_IllegalArgumentException() {
-        given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=loc", "symbol", "currency"))
+        given(rateService.isRegisteredProviderOrThrow("provider")).willReturn(true)
+        given(webQueryService.getWebQueryEntity("/rate/v1/provider/sym/currency/?locale=loc", "sym", "currency"))
                 .willThrow(java.lang.IllegalArgumentException("err_msg"))
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy?locale=loc"))
@@ -139,7 +154,8 @@ class RateControllerIT {
 
     @Test
     fun downloadIqyFileForRequest_RuntimeException() {
-        given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=loc", "symbol", "currency"))
+        given(rateService.isRegisteredProviderOrThrow("provider")).willReturn(true)
+        given(webQueryService.getWebQueryEntity("/rate/v1/provider/sym/currency/?locale=loc", "sym", "currency"))
                 .willThrow(java.lang.RuntimeException("err_msg"))
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy?locale=loc"))

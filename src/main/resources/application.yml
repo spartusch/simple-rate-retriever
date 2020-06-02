@@ -14,10 +14,15 @@ management:
       http.server.requests: true
 
 simple-rate-retriever:
+  fraction-digits: 4
   request-logging-filter.exclude: '/actuator'
-  provider:
-    coin-market-cap.uri: 'https://api.coinmarketcap.com/v1/ticker/'
-    on-vista.uri: 'https://www.onvista.de/api/header/search?q='
+  providers:
+    coin-market-cap:
+      id: 'coinmarket'
+      uri: 'https://api.coinmarketcap.com/v1/ticker/'
+    on-vista:
+      id: 'stockexchange'
+      uri: 'https://www.onvista.de/api/header/search?q='
 
 logging:
   level:

@@ -16,8 +16,13 @@ class OnVistaRateProviderTest {
 
     @BeforeEach
     fun setUp() {
-        properties = OnVistaProperties("/api/header/search?q=")
+        properties = OnVistaProperties("someId", "/api/header/search?q=")
         cut = OnVistaRateProvider(properties)
+    }
+
+    @Test
+    fun getProviderId_returnsConfiguredId() {
+        assertThat(cut.getProviderId()).isEqualTo("someId")
     }
 
     //  isCurrencyCodeSupported

@@ -18,8 +18,10 @@ interface RateService {
 private val log = LoggerFactory.getLogger(RateServiceImpl::class.java)
 
 @Service
-class RateServiceImpl(private val stockExchangeRateProvider: StockExchangeRateProvider,
-                      private val coinMarketRateProvider: CoinMarketRateProvider) : RateService {
+class RateServiceImpl(
+    private val properties: SimpleRateRetrieverProperties,
+    private val rateProviders: List<RateProvider>
+) : RateService {
 
     private fun formatRate(rate: BigDecimal, locale: String): String {
         val numberFormat = DecimalFormat.getInstance(Locale.forLanguageTag(locale))
@@ -39,10 +41,13 @@ class RateServiceImpl(private val stockExchangeRateProvider: StockExchangeRatePr
         }
     }
 
-    override fun getCoinMarketRate(symbol: String, currencyCode: String, locale: String)
-            = getCurrentRate(coinMarketRateProvider, symbol, currencyCode, locale)
+    private fun getProviderOrThrow(providerId: String) =
+            rateProviders.find { provider -> provider.getProviderId().equals(providerId, ignoreCase = true) }
+            ?: throw NotFoundException("No rate provider found for id '$providerId'")
 
-    override fun getStockExchangeRate(symbol: String, currencyCode: String, locale: String)
-            = getCurrentRate(stockExchangeRateProvider, symbol, currencyCode, locale)
+    override fun isRegisteredProviderOrThrow(providerId: String) =
+            getProviderOrThrow(providerId).let { true }
 
+    override fun getCurrentRate(providerId: String, symbol: String, currencyCode: String, locale: String) =
+            getCurrentRate(getProviderOrThrow(providerId), symbol.toUpperCase(), currencyCode.toUpperCase(), locale)
 }

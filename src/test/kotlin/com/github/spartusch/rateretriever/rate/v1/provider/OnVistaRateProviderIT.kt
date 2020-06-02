@@ -35,7 +35,7 @@ class OnVistaRateProviderIT {
 
     @BeforeEach
     fun setUp() {
-        properties = OnVistaProperties("${serverMock.baseUrl()}/api/header/search?q=")
+        properties = OnVistaProperties("id", "${serverMock.baseUrl()}/api/header/search?q=")
         cut = OnVistaRateProvider(properties)
     }
 

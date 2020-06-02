@@ -14,70 +14,128 @@ import java.math.BigDecimal
 
 class RateServiceImplTest {
 
-    private lateinit var firstProvider: StockExchangeRateProvider
-    private lateinit var secondProvider: CoinMarketRateProvider
+    private lateinit var provider: RateProvider
     private lateinit var cut: RateServiceImpl
 
     @BeforeEach
     fun setUp() {
-        firstProvider = Mockito.mock(StockExchangeRateProvider::class.java)
-        secondProvider = Mockito.mock(CoinMarketRateProvider::class.java)
-        cut = RateServiceImpl(firstProvider, secondProvider)
+        val properties = SimpleRateRetrieverProperties(fractionDigits = 4)
+        provider = Mockito.mock(RateProvider::class.java)
+        cut = RateServiceImpl(properties, listOf(provider))
+    }
+
+    // isRegisteredProviderOrThrow
+
+    @Test
+    fun isRegisteredProviderOrThrow_returnsTrueForConfiguredProvider() {
+        given(provider.getProviderId()).willReturn("youKnowMe")
+        val ret = cut.isRegisteredProviderOrThrow("youKnowMe")
+        assertThat(ret).isTrue()
     }
 
     @Test
-    fun getCurrentRate_happyCase() {
-        given(firstProvider.isCurrencyCodeSupported("EUR")).willReturn(true)
-        given(firstProvider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34"))
+    fun isRegisteredProviderOrThrow_returnsTrueForConfiguredProviderIgnoringCase() {
+        given(provider.getProviderId()).willReturn("YoUkNoWmE")
+        val ret = cut.isRegisteredProviderOrThrow("youKNOWme")
+        assertThat(ret).isTrue()
+    }
 
-        val rate = cut.getCurrentRate(firstProvider, "SYM", "EUR", "de-DE")
+    @Test
+    fun isRegisteredProviderOrThrow_throwsForUnknownProvider() {
+        given(provider.getProviderId()).willReturn("youKnowMe")
+
+        val e = ThrowableAssert.catchThrowableOfType({
+            cut.isRegisteredProviderOrThrow("unknown")
+        }, NotFoundException::class.java)
+
+        assertThat(e).hasMessageContaining("unknown") // must include unknown id
+    }
+
+    @Test
+    fun isRegisteredProviderOrThrow_throwsIfNoProvidersAreConfigured() {
+        cut = RateServiceImpl(SimpleRateRetrieverProperties(0), listOf())
+        ThrowableAssert.catchThrowableOfType({
+            cut.isRegisteredProviderOrThrow("unknown")
+        }, NotFoundException::class.java)
+    }
+
+    // getCurrentRate
+
+    @Test
+    fun getCurrentRate_happyCase() {
+        given(provider.getProviderId()).willReturn("provider")
+        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
+        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34"))
+
+        val rate = cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
 
         assertThat(rate).isEqualTo("12,3400")
     }
 
     @Test
-    fun getCurrentRate_throwsIfCurrencyCodeIsNotSupported() {
-        given(firstProvider.isCurrencyCodeSupported(anyString())).willReturn(false)
+    fun getCurrentRate_normalizesToUpperCase() {
+        given(provider.getProviderId()).willReturn("provider")
+        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
+        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34"))
 
-        val e = ThrowableAssert.catchThrowableOfType(
-                { cut.getCurrentRate(firstProvider, "SYM", "EUR", "de-DE") },
-                IllegalArgumentException::class.java)
+        val rate = cut.getCurrentRate("provider", "sym", "eur", "de-DE")
+
+        assertThat(rate).isNotBlank()
+    }
+
+    @Test
+    fun getCurrentRate_fractionDigitsIsConfigurable() {
+        cut = RateServiceImpl(SimpleRateRetrieverProperties(fractionDigits = 6), listOf(provider))
+        given(provider.getProviderId()).willReturn("provider")
+        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
+        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34"))
+
+        val rate = cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+
+        assertThat(rate).isEqualTo("12,340000")
+    }
+
+    @Test
+    fun getCurrentRate_fractionDigitsAreRoundedAtTheLastDigit() {
+        given(provider.getProviderId()).willReturn("provider")
+        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
+        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34567"))
+
+        val rate = cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+
+        assertThat(rate).isEqualTo("12,3457")
+    }
+
+    @Test
+    fun getCurrentRate_throwsIfCurrencyCodeIsNotSupported() {
+        given(provider.getProviderId()).willReturn("provider")
+        given(provider.isCurrencyCodeSupported(anyString())).willReturn(false)
+
+        val e = ThrowableAssert.catchThrowableOfType({
+            cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+        }, IllegalArgumentException::class.java)
 
         assertThat(e).hasMessageContaining("EUR") // should report unsupported currency code
     }
 
     @Test
     fun getCurrentRate_throwsIfFetchingRatesThrowsThrowable() {
-        given(firstProvider.isCurrencyCodeSupported("EUR")).willReturn(true)
-        given(firstProvider.getCurrentRate(anyString(), anyString())).willThrow(Error("some error"))
+        given(provider.getProviderId()).willReturn("provider")
+        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
+        given(provider.getCurrentRate(anyString(), anyString())).willThrow(Error("some error"))
 
-        val e = ThrowableAssert.catchThrowableOfType(
-                { cut.getCurrentRate(firstProvider, "SYM", "EUR", "de-DE") },
-                RuntimeException::class.java)
+        val e = ThrowableAssert.catchThrowableOfType({
+            cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+        }, RuntimeException::class.java)
 
         assertThat(e).hasMessageContaining("some error")
     }
 
     @Test
-    fun getStockExchangeRate_callsFirstProvider() {
-        given(firstProvider.isCurrencyCodeSupported(anyString())).willReturn(true)
-        given(firstProvider.getCurrentRate(anyString(), anyString())).willReturn(BigDecimal("12.34"))
-
-        cut.getStockExchangeRate("SYM", "EUR", "en-US")
-
-        verify(firstProvider, times(1)).isCurrencyCodeSupported("EUR")
-        verify(firstProvider, times(1)).getCurrentRate("SYM", "EUR")
+    fun getCurrentRate_throwsIfProviderIsUnknown() {
+        given(provider.getProviderId()).willReturn("provider")
+        ThrowableAssert.catchThrowableOfType({
+            cut.getCurrentRate("youDontKnowMe", "SYM", "EUR", "de-DE")
+        }, NotFoundException::class.java)
     }
-
-    @Test
-    fun getCoinMarketRate_callsSecondProvider() {
-        given(secondProvider.isCurrencyCodeSupported(anyString())).willReturn(true)
-        given(secondProvider.getCurrentRate(anyString(), anyString())).willReturn(BigDecimal("12.34"))
-
-        cut.getCoinMarketRate("SYM", "EUR", "en-US")
-
-        verify(secondProvider, times(1)).isCurrencyCodeSupported("EUR")
-        verify(secondProvider, times(1)).getCurrentRate("SYM", "EUR")
-    }
-
 }
