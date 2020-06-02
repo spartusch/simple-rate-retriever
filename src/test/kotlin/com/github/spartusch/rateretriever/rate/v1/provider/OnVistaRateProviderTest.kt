@@ -3,6 +3,7 @@ package com.github.spartusch.rateretriever.rate.v1.provider
 import com.github.spartusch.rateretriever.rate.v1.configuration.OnVistaProperties
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EmptySource
 import org.junit.jupiter.params.provider.ValueSource
@@ -33,5 +34,4 @@ class OnVistaRateProviderTest {
     fun isCurrencyCodeSupported_unsupportedCodes(currencyCode: String) {
         assertThat(cut.isCurrencyCodeSupported(currencyCode)).isFalse()
     }
-
 }

@@ -43,9 +43,11 @@ class OnVistaRateProviderIT {
         stubResponse(SEARCH_URL, """.."snapshotlink":"$assetLink"..""", statusCode)
     }
 
-    private fun stubAssetPage(suffix: String = "",
-                              statusCode: Int = 200,
-                              content: String = """..<span class="price">1.230,45 EUR</span>.."""): String {
+    private fun stubAssetPage(
+        suffix: String = "",
+        statusCode: Int = 200,
+        content: String = """..<span class="price">1.230,45 EUR</span>.."""
+    ): String {
         return serverMock.baseUrl() + stubResponse(ASSET_URL + suffix, content, statusCode)
     }
 
@@ -91,9 +93,11 @@ class OnVistaRateProviderIT {
         stubResponse(SEARCH_URL, "no link to extract - sorry!", 200)
 
         val exception =
-                ThrowableAssert.catchThrowableOfType({ cut.getCurrentRate("foo", "EUR") }, DataExtractionException::class.java)
+            ThrowableAssert.catchThrowableOfType({
+                cut.getCurrentRate("foo", "EUR")
+            }, DataExtractionException::class.java)
 
-        assertThat(exception).hasMessageContaining("Asset not found")
+        assertThat(exception).hasMessageContaining("Asset link not found")
     }
 
     @Test
@@ -101,7 +105,9 @@ class OnVistaRateProviderIT {
         stubSearchPage(assetLink = stubAssetPage(content = "no amount to extract in here"))
 
         val exception =
-                ThrowableAssert.catchThrowableOfType({ cut.getCurrentRate("foo", "EUR") }, DataExtractionException::class.java)
+            ThrowableAssert.catchThrowableOfType({
+                cut.getCurrentRate("foo", "EUR")
+            }, DataExtractionException::class.java)
 
         assertThat(exception).hasMessageContaining("Amount not found")
     }
@@ -146,5 +152,4 @@ class OnVistaRateProviderIT {
 
         assertThat(rate).isEqualByComparingTo("12345.12")
     }
-
 }

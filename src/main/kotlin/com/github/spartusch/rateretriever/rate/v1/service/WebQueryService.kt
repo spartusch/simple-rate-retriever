@@ -7,23 +7,20 @@ import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 
 interface WebQueryService {
-
     fun getWebQueryEntity(uri: String, symbol: String, currencyCode: String): HttpEntity<ByteArray>
-
 }
 
 @Service
-class WebQueryServiceImpl() : WebQueryService {
-
+class WebQueryServiceImpl : WebQueryService {
     override fun getWebQueryEntity(uri: String, symbol: String, currencyCode: String): HttpEntity<ByteArray> {
         val webQuery = WebQueryFactory.create(uri)
 
         val headers = HttpHeaders()
         headers[HttpHeaders.CONTENT_TYPE] = webQuery.contentType
         headers[HttpHeaders.CONTENT_LENGTH] = webQuery.contentLength.toString()
-        headers[HttpHeaders.CONTENT_DISPOSITION] = WebQuery.getContentDisposition("${symbol}_${currencyCode.toUpperCase()}.iqy")
+        headers[HttpHeaders.CONTENT_DISPOSITION] =
+            WebQuery.getContentDisposition("${symbol}_${currencyCode.toUpperCase()}.iqy")
 
         return HttpEntity(webQuery.contentBytes, headers)
     }
-
 }

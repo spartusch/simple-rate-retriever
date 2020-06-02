@@ -48,5 +48,4 @@ class StringExtensionsTest {
     fun toURI_throwsExceptionIfStringIsInvalid(invalidUri: String) {
         ThrowableAssert.catchThrowableOfType({ invalidUri.toURI() }, MalformedURLException::class.java)
     }
-
 }

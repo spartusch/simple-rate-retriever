@@ -1,6 +1,7 @@
 package com.github.spartusch.rateretriever.rate.v1.controller
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.RequestLoggingFilterProperties
+import com.github.spartusch.rateretriever.rate.v1.exception.NotFoundException
 import com.github.spartusch.rateretriever.rate.v1.service.RateService
 import com.github.spartusch.rateretriever.rate.v1.service.WebQueryService
 import org.assertj.core.api.Assertions.assertThat
@@ -38,11 +39,11 @@ class RateControllerIT {
     private lateinit var mockMvc: MockMvc
 
     @Test
-    fun getStockExchangeRate_happyCase() {
-        given(rateService.getStockExchangeRate("ETF110", "EUR", "de-DE"))
+    fun getCurrentRate_happyCase() {
+        given(rateService.getCurrentRate("provider", "ETF110", "EUR", "de-DE"))
                 .willReturn("123,0000")
 
-        val result = mockMvc.perform(get("/rate/v1/stockexchange/ETF110/EUR?locale=de-DE"))
+        val result = mockMvc.perform(get("/rate/v1/provider/ETF110/EUR?locale=de-DE"))
                 .andExpect(status().isOk)
                 .andExpect(header().string("Content-Type", "text/plain;charset=UTF-8"))
                 .andReturn()
@@ -52,22 +53,22 @@ class RateControllerIT {
     }
 
     @Test
-    fun getStockExchangeRate_missingLocaleDefaultsToUs() {
-        given(rateService.getStockExchangeRate("ETF110", "EUR", "en-US"))
+    fun getCurrentRate_missingLocaleDefaultsToUs() {
+        given(rateService.getCurrentRate("provider", "ETF110", "EUR", "en-US"))
                 .willReturn("12.3400")
 
-        mockMvc.perform(get("/rate/v1/stockexchange/ETF110/EUR"))
+        mockMvc.perform(get("/rate/v1/provider/ETF110/EUR"))
                 .andExpect(status().isOk)
 
-        verify(rateService, times(1)).getStockExchangeRate("ETF110", "EUR", "en-US")
+        verify(rateService, times(1)).getCurrentRate("provider", "ETF110", "EUR", "en-US")
     }
 
     @Test
-    fun getStockExchangeRate_IllegalArgumentException() {
-        given(rateService.getStockExchangeRate("xxx", "yyy", "en-US"))
+    fun getCurrentRate_IllegalArgumentException() {
+        given(rateService.getCurrentRate("provider", "xxx", "yyy", "en-US"))
                 .willThrow(java.lang.IllegalArgumentException("err_msg"))
 
-        val result = mockMvc.perform(get("/rate/v1/stockexchange/xxx/yyy"))
+        val result = mockMvc.perform(get("/rate/v1/provider/xxx/yyy"))
                 .andExpect(status().isBadRequest)
                 .andReturn()
 
@@ -75,62 +76,11 @@ class RateControllerIT {
     }
 
     @Test
-    fun getStockExchangeRate_RuntimeException() {
-        given(rateService.getStockExchangeRate("xxx", "yyy", "en-US"))
+    fun getCurrentRate_RuntimeException() {
+        given(rateService.getCurrentRate("provider", "xxx", "yyy", "en-US"))
                 .willThrow(java.lang.RuntimeException("err_msg"))
 
-        val result = mockMvc.perform(get("/rate/v1/stockexchange/xxx/yyy"))
-                .andExpect(status().isInternalServerError)
-                .andReturn()
-
-        assertThat(result.response.contentAsString).contains("err_msg")
-    }
-
-    // getCoinMarketRate
-
-    @Test
-    fun getCoinMarketRate_happyCase() {
-        given(rateService.getCoinMarketRate("bitcoin", "EUR", "de-DE"))
-                .willReturn("123,0000")
-
-        val result = mockMvc.perform(get("/rate/v1/coinmarket/bitcoin/EUR?locale=de-DE"))
-                .andExpect(status().isOk)
-                .andExpect(header().string("Content-Type", "text/plain;charset=UTF-8"))
-                .andReturn()
-
-        assertThat(result.response.contentAsString)
-                .isEqualTo("123,0000")
-    }
-
-    @Test
-    fun getCoinMarketRate_missingLocaleDefaultsToUs() {
-        given(rateService.getCoinMarketRate("bitcoin", "EUR", "en-US"))
-                .willReturn("12.3400")
-
-        mockMvc.perform(get("/rate/v1/coinmarket/bitcoin/EUR"))
-                .andExpect(status().isOk)
-
-        verify(rateService, times(1)).getCoinMarketRate("bitcoin", "EUR", "en-US")
-    }
-
-    @Test
-    fun getCoinMarketRate_IllegalArgumentException() {
-        given(rateService.getCoinMarketRate("xxx", "yyy", "en-US"))
-                .willThrow(java.lang.IllegalArgumentException("err_msg"))
-
-        val result = mockMvc.perform(get("/rate/v1/coinmarket/xxx/yyy"))
-                .andExpect(status().isBadRequest)
-                .andReturn()
-
-        assertThat(result.response.contentAsString).contains("err_msg")
-    }
-
-    @Test
-    fun getCoinMarketRate_RuntimeException() {
-        given(rateService.getCoinMarketRate("xxx", "yyy", "en-US"))
-                .willThrow(java.lang.RuntimeException("err_msg"))
-
-        val result = mockMvc.perform(get("/rate/v1/coinmarket/xxx/yyy"))
+        val result = mockMvc.perform(get("/rate/v1/provider/xxx/yyy"))
                 .andExpect(status().isInternalServerError)
                 .andReturn()
 
@@ -147,7 +97,7 @@ class RateControllerIT {
         given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=loc", "symbol", "currency"))
                 .willReturn(HttpEntity("test".toByteArray(), headers))
 
-        val result = mockMvc.perform(get("/rate/v1/stockexchange/symbol/currency/iqy?locale=loc"))
+        val result = mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy?locale=loc"))
                 .andExpect(status().isOk)
                 .andExpect(header().string("Content-Disposition", "contentDisposition"))
                 .andExpect(header().string("Content-Type", MediaType.APPLICATION_OCTET_STREAM_VALUE))
@@ -161,17 +111,17 @@ class RateControllerIT {
         given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=en-US", "symbol", "currency"))
                 .willReturn(HttpEntity("test".toByteArray(), HttpHeaders()))
 
-        mockMvc.perform(get("/rate/v1/stockexchange/symbol/currency/iqy"))
+        mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy"))
                 .andExpect(status().isOk)
                 .andReturn()
 
         verify(webQueryService, times(1))
-                .getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=en-US", "symbol", "currency")
+                .getWebQueryEntity("/rate/v1/provider/sym/currency/?locale=en-US", "sym", "currency")
     }
 
     @Test
     fun downloadIqyFileForRequest_verifiesProviders() {
-        mockMvc.perform(get("/rate/v1/fakeProvider/symbol/currency/iqy"))
+        mockMvc.perform(get("/rate/v1/fakeProvider/sym/currency/iqy"))
                 .andExpect(status().isBadRequest)
     }
 
@@ -180,7 +130,7 @@ class RateControllerIT {
         given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=loc", "symbol", "currency"))
                 .willThrow(java.lang.IllegalArgumentException("err_msg"))
 
-        val result = mockMvc.perform(get("/rate/v1/stockexchange/symbol/currency/iqy?locale=loc"))
+        val result = mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy?locale=loc"))
                 .andExpect(status().isBadRequest)
                 .andReturn()
 
@@ -192,11 +142,10 @@ class RateControllerIT {
         given(webQueryService.getWebQueryEntity("/rate/v1/stockexchange/symbol/currency/?locale=loc", "symbol", "currency"))
                 .willThrow(java.lang.RuntimeException("err_msg"))
 
-        val result = mockMvc.perform(get("/rate/v1/stockexchange/symbol/currency/iqy?locale=loc"))
+        val result = mockMvc.perform(get("/rate/v1/provider/sym/currency/iqy?locale=loc"))
                 .andExpect(status().isInternalServerError)
                 .andReturn()
 
         assertThat(result.response.contentAsString).isEqualTo("err_msg")
     }
-
 }

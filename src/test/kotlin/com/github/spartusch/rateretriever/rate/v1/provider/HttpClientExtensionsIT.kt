@@ -31,7 +31,7 @@ class HttpClientExtensionsIT {
     @ConfigureWireMock
     private val options = WireMockConfiguration.wireMockConfig().dynamicPort()
 
-    private val timer = object: Timer {
+    private val timer = object : Timer {
         var recordCalled = false
 
         override fun <T : Any?> recordCallable(f: Callable<T>): T { recordCalled = true; return f.call() }
@@ -92,5 +92,4 @@ class HttpClientExtensionsIT {
         cut.getUrl(uri, "", timer)
         assertThat(timer.recordCalled).isTrue()
     }
-
 }

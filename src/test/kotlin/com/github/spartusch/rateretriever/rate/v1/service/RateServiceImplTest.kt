@@ -1,16 +1,15 @@
 package com.github.spartusch.rateretriever.rate.v1.service
 
-import com.github.spartusch.rateretriever.rate.v1.provider.CoinMarketRateProvider
-import com.github.spartusch.rateretriever.rate.v1.provider.StockExchangeRateProvider
+import com.github.spartusch.rateretriever.rate.v1.configuration.SimpleRateRetrieverProperties
+import com.github.spartusch.rateretriever.rate.v1.exception.NotFoundException
+import com.github.spartusch.rateretriever.rate.v1.provider.RateProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
-import org.mockito.BDDMockito.verify
 import org.mockito.Mockito
-import org.mockito.Mockito.times
 import java.math.BigDecimal
 
 class RateServiceImplTest {

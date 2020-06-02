@@ -11,6 +11,6 @@ interface RequestLoggingFilterProperties {
 @ConstructorBinding
 @ConfigurationProperties(prefix = "simple-rate-retriever.request-logging-filter")
 data class RequestLoggingFilterPropertiesImpl(
-        override val enabled: Boolean = true,
-        override val exclude: List<String> = emptyList()
+    override val enabled: Boolean = true,
+    override val exclude: List<String> = emptyList()
 ) : RequestLoggingFilterProperties

@@ -12,6 +12,9 @@ private const val USER_AGENT = "User Agent"
 
 private val log = LoggerFactory.getLogger("RateProviderExtensionsKt")
 
+@Suppress("MagicNumber")
+private val validStatusCodeRange = 1..399
+
 internal fun HttpClient.getUrl(uri: URI, accept: String, requestTimer: Timer): String {
     val request = HttpRequest.newBuilder(uri)
             .header("User-Agent", USER_AGENT)
@@ -21,7 +24,7 @@ internal fun HttpClient.getUrl(uri: URI, accept: String, requestTimer: Timer): S
     return requestTimer.recordCallable {
         this.send(request, HttpResponse.BodyHandlers.ofString())
                 .also { log.info("Response status code: {}", it.statusCode()) }
-                .takeIf { it.statusCode() < 400 }
+                .takeIf { it.statusCode() in validStatusCodeRange }
                 ?.body()
     } ?: throw RequestException("Couldn't fetch $uri")
 }

@@ -28,5 +28,4 @@ class RequestLoggingFilter(private val properties: RequestLoggingFilterPropertie
         }
         chain.doFilter(servletRequest, servletResponse)
     }
-
 }

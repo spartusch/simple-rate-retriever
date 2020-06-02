@@ -5,10 +5,11 @@ plugins {
     kotlin("jvm") version kotlinVersion
     id("org.jetbrains.kotlin.plugin.spring") version kotlinVersion
     id("org.springframework.boot") version "2.3.0.RELEASE"
-    id("com.gorylenko.gradle-git-properties") version "2.2.2"
-}
+    id("io.spring.dependency-management") version "1.0.9.RELEASE"
 
-apply(plugin = "io.spring.dependency-management")
+    id("com.gorylenko.gradle-git-properties") version "2.2.2"
+    id("io.gitlab.arturbosch.detekt") version "1.9.1"
+}
 
 object Versions {
     object Dependencies {
@@ -17,7 +18,6 @@ object Versions {
         const val wiremock = "2.26.3"
         const val wiremockExtension = "0.4.0"
     }
-
     const val jvmTarget = "11"
     const val projectVersion = "2.0.0-SNAPSHOT"
 }
@@ -25,6 +25,7 @@ object Versions {
 repositories {
     mavenLocal()
     mavenCentral()
+    jcenter() // required for detekt
     maven { url = uri("https://jitpack.io") } // required for com.github.JensPiegsa:wiremock-extension
 }
 
@@ -55,7 +56,7 @@ springBoot {
 }
 
 tasks {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>() {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = Versions.jvmTarget
     }
 

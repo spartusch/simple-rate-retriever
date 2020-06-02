@@ -37,8 +37,7 @@ class WebQueryServiceImplTest {
 
     @Test
     fun getWebQueryEntity_contentDisposition() {
-        val entity = cut.getWebQueryEntity("someUri", "symbol", "currencyCode")
-        assertThat(entity.headers).contains(entry("Content-Disposition", listOf("attachment; filename=symbol_CURRENCYCODE.iqy")))
+        val entity = cut.getWebQueryEntity("someUri", "sym", "cur")
+        assertThat(entity.headers).contains(entry("Content-Disposition", listOf("attachment; filename=sym_CUR.iqy")))
     }
-
 }

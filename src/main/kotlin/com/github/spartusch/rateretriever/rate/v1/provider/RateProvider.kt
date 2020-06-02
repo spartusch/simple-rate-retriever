@@ -5,11 +5,5 @@ import java.math.BigDecimal
 interface RateProvider {
 
     fun getCurrentRate(symbol: String, currencyCode: String): BigDecimal?
-
     fun isCurrencyCodeSupported(currencyCode: String): Boolean
-
 }
-
-interface StockExchangeRateProvider : RateProvider {}
-
-interface CoinMarketRateProvider : RateProvider {}
