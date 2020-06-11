@@ -15,6 +15,7 @@ object Versions {
     object Dependencies {
         const val excelWebQuery = "2.0.0-SNAPSHOT"
         const val springBootAdmin = "2.2.3"
+        const val detektVersion = "1.9.1"
         const val wiremock = "2.26.3"
         const val wiremockExtension = "0.4.0"
     }
@@ -46,6 +47,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.github.tomakehurst:wiremock-standalone:${Versions.Dependencies.wiremock}")
     testImplementation("com.github.JensPiegsa:wiremock-extension:${Versions.Dependencies.wiremockExtension}")
+
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.Dependencies.detektVersion}")
 }
 
 group = "com.github.spartusch"
@@ -53,6 +56,10 @@ version = Versions.projectVersion
 
 springBoot {
     buildInfo()
+}
+
+detekt {
+    buildUponDefaultConfig = true
 }
 
 tasks {
