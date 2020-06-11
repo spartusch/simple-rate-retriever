@@ -2,4 +2,8 @@
 **
 
 # Except the following
-! build/libs/*.jar
+! gradle
+! gradlew
+! *.gradle.kts
+! .git
+! src

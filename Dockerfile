@@ -1,15 +1,22 @@
-FROM adoptopenjdk:11-jre-hotspot as builder
-WORKDIR application
-COPY build/libs/*.jar application/
-RUN java -Djarmode=layertools -jar application/*.jar extract
-RUN rm application/*.jar
+FROM com.github.spartusch/web-query-gradle-base:latest as builder
+WORKDIR /application
+# Set up gradle
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x gradlew
+# Copy source
+COPY *.gradle.kts ./
+COPY .git .git
+COPY src src
+# Build and extract layered jar
+RUN ./gradlew --no-daemon bootJar && java -Djarmode=layertools -jar build/libs/*.jar extract
 
 FROM adoptopenjdk:11-jre-hotspot
 EXPOSE 8080
 ENV server.port 8080
-WORKDIR application
-COPY --from=builder application/dependencies/ ./
-COPY --from=builder application/spring-boot-loader/ ./
-COPY --from=builder application/snapshot-dependencies/ ./
-COPY --from=builder application/application/ ./
+WORKDIR /application
+COPY --from=builder /application/dependencies .
+COPY --from=builder /application/spring-boot-loader .
+COPY --from=builder /application/snapshot-dependencies .
+COPY --from=builder /application/application .
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]

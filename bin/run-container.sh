@@ -17,8 +17,8 @@ if [ -z $container_id ];
 	  echo
 fi
 
-echo "=> Building image '$project_group/$project_name' (might take a while) ..."
-./gradlew dockerImage > /dev/null
+echo "=> Building image '$project_group/$project_name':latest (might take a while) ..."
+docker image build -t $project_group'/'$project_name':latest' .
 echo
 
 if [[ ! $(docker network ls | grep $project_group) ]];
@@ -36,11 +36,6 @@ docker run -p$port:8080 \
   -e spring.boot.admin.client.url=$admin_server \
   -d --network $project_group --name $project_name \
   $project_group'/'$project_name':latest' > /dev/null
-
-echo
-echo "=> Cleaning up ...";
-echo
-docker system prune -f > /dev/null
 
 echo "=> Done"
 echo
