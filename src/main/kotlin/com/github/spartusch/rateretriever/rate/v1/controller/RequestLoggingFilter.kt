@@ -21,7 +21,11 @@ class RequestLoggingFilter(private val properties: RequestLoggingFilterPropertie
         }
     }
 
-    override fun doFilter(servletRequest: ServletRequest, servletResponse: ServletResponse, chain: FilterChain) {
+    override fun doFilter(
+        servletRequest: ServletRequest,
+        servletResponse: ServletResponse,
+        chain: FilterChain
+    ) {
         val request: HttpServletRequest = servletRequest as HttpServletRequest
         if (properties.enabled && properties.exclude.none { path -> request.requestURI.startsWith(path) }) {
             log.info("Request: {}", request.requestURI)

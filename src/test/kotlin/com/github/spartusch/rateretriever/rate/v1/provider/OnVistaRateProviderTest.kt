@@ -5,8 +5,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EmptySource
 import org.junit.jupiter.params.provider.ValueSource
+import java.util.Currency
 
 class OnVistaRateProviderTest {
 
@@ -28,15 +28,18 @@ class OnVistaRateProviderTest {
     //  isCurrencyCodeSupported
 
     @ParameterizedTest
-    @ValueSource(strings = ["EUR", "eur", "Eur", "eUr", "euR"])
-    fun isCurrencyCodeSupported_supportedCodes(currencyCode: String) {
-        assertThat(cut.isCurrencyCodeSupported(currencyCode)).isTrue()
+    @ValueSource(strings = ["EUR"])
+    fun isCurrencyCodeSupported_supportedCodes(
+        currencyCode: String
+    ) {
+        assertThat(cut.isCurrencyCodeSupported(Currency.getInstance(currencyCode))).isTrue()
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["USD", "XYZ"])
-    @EmptySource
-    fun isCurrencyCodeSupported_unsupportedCodes(currencyCode: String) {
-        assertThat(cut.isCurrencyCodeSupported(currencyCode)).isFalse()
+    @ValueSource(strings = ["USD"])
+    fun isCurrencyCodeSupported_unsupportedCodes(
+        currencyCode: String
+    ) {
+        assertThat(cut.isCurrencyCodeSupported(Currency.getInstance(currencyCode))).isFalse()
     }
 }

@@ -6,6 +6,7 @@ import com.github.jenspiegsa.wiremockextension.WireMockExtension
 import com.github.spartusch.rateretriever.rate.WireMockUtils.stubResponse
 import com.github.spartusch.rateretriever.rate.v1.configuration.OnVistaProperties
 import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException
+import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -16,6 +17,7 @@ import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.util.Currency
 
 private const val SEARCH_URL = "/api/header/search?q=foo"
 private const val ASSET_URL = "/some/foo"
@@ -32,6 +34,9 @@ class OnVistaRateProviderIT {
     private lateinit var properties: OnVistaProperties
 
     private lateinit var cut: OnVistaRateProvider
+
+    private val symbol = TradeSymbol("foo")
+    private val currency = Currency.getInstance("EUR")
 
     @BeforeEach
     fun setUp() {
@@ -57,7 +62,7 @@ class OnVistaRateProviderIT {
     fun getCurrentRate_searchAndRetrieve() {
         stubSearchPage(assetLink = stubAssetPage())
 
-        cut.getCurrentRate("foo", "EUR")
+        cut.getCurrentRate(symbol, currency)
 
         WireMock.verify(1, getRequestedFor(urlEqualTo(SEARCH_URL)))
         WireMock.verify(1, getRequestedFor(urlEqualTo(ASSET_URL)))
@@ -67,9 +72,9 @@ class OnVistaRateProviderIT {
     fun getCurrentRate_searchIsCached() {
         stubSearchPage(assetLink = stubAssetPage())
 
-        cut.getCurrentRate("foo", "EUR")
-        cut.getCurrentRate("foo", "EUR")
-        cut.getCurrentRate("foo", "EUR")
+        cut.getCurrentRate(symbol, currency)
+        cut.getCurrentRate(symbol, currency)
+        cut.getCurrentRate(symbol, currency)
 
         WireMock.verify(1, getRequestedFor(urlEqualTo(SEARCH_URL)))
         WireMock.verify(3, getRequestedFor(urlEqualTo(ASSET_URL)))
@@ -79,9 +84,9 @@ class OnVistaRateProviderIT {
     fun getCurrentRate_searchIsNotCachedOnFailure() {
         stubSearchPage(assetLink = stubAssetPage(statusCode = 404))
 
-        ThrowableAssert.catchThrowable { cut.getCurrentRate("foo", "EUR") }
-        ThrowableAssert.catchThrowable { cut.getCurrentRate("foo", "EUR") }
-        ThrowableAssert.catchThrowable { cut.getCurrentRate("foo", "EUR") }
+        ThrowableAssert.catchThrowable { cut.getCurrentRate(symbol, currency) }
+        ThrowableAssert.catchThrowable { cut.getCurrentRate(symbol, currency) }
+        ThrowableAssert.catchThrowable { cut.getCurrentRate(symbol, currency) }
 
         val expectedRequests = 3 * (1 + properties.maxRetries)
         WireMock.verify(expectedRequests, getRequestedFor(urlEqualTo(SEARCH_URL)))
@@ -94,7 +99,7 @@ class OnVistaRateProviderIT {
 
         val exception =
             ThrowableAssert.catchThrowableOfType({
-                cut.getCurrentRate("foo", "EUR")
+                cut.getCurrentRate(symbol, currency)
             }, DataExtractionException::class.java)
 
         assertThat(exception).hasMessageContaining("Asset link not found")
@@ -106,7 +111,7 @@ class OnVistaRateProviderIT {
 
         val exception =
             ThrowableAssert.catchThrowableOfType({
-                cut.getCurrentRate("foo", "EUR")
+                cut.getCurrentRate(symbol, currency)
             }, DataExtractionException::class.java)
 
         assertThat(exception).hasMessageContaining("Amount not found")
@@ -121,7 +126,7 @@ class OnVistaRateProviderIT {
                 <a>Umrechnung:</a> 333,4400 EUR"""
         ))
 
-        val rate = cut.getCurrentRate("foo", "EUR")
+        val rate = cut.getCurrentRate(symbol, currency)
 
          assertThat(rate).isEqualByComparingTo("111.22")
     }
@@ -133,7 +138,7 @@ class OnVistaRateProviderIT {
                 """<span class="price">123,00 USD</span><a>Umrechnung:</a> 150,00 EUR"""
         ))
 
-        val rate = cut.getCurrentRate("foo", "EUR")
+        val rate = cut.getCurrentRate(symbol, currency)
 
         assertThat(rate).isEqualByComparingTo("150")
     }
@@ -148,7 +153,7 @@ class OnVistaRateProviderIT {
                 <span att='c'>EUR</span>"""
         ))
 
-        val rate = cut.getCurrentRate("foo", "EUR")
+        val rate = cut.getCurrentRate(symbol, currency)
 
         assertThat(rate).isEqualByComparingTo("12345.12")
     }

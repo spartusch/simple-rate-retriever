@@ -22,7 +22,10 @@ class StringExtensionsTest {
             "en: 123,456,789.1234",
             delimiter = ':'
     )
-    fun toBigDecimal_parsesDifferentLocales(locale: Locale, amount: String) {
+    fun toBigDecimal_parsesDifferentLocales(
+        locale: Locale,
+        amount: String
+    ) {
         val convertedAmount = amount.toBigDecimal(locale)
         assertThat(convertedAmount).isEqualByComparingTo("123456789.1234")
     }
@@ -30,7 +33,9 @@ class StringExtensionsTest {
     @ParameterizedTest
     @ValueSource(strings = ["invalid!", "@1"])
     @EmptySource
-    fun toBigDecimal_throwsExceptionIfInputIsInvalid(input: String) {
+    fun toBigDecimal_throwsExceptionIfInputIsInvalid(
+        input: String
+    ) {
         ThrowableAssert.catchThrowable { input.toBigDecimal(Locale.GERMANY) }
     }
 
@@ -45,7 +50,9 @@ class StringExtensionsTest {
     @ParameterizedTest
     @ValueSource(strings = ["invalid", "http://does!not@work"])
     @EmptySource
-    fun toURI_throwsExceptionIfStringIsInvalid(invalidUri: String) {
+    fun toURI_throwsExceptionIfStringIsInvalid(
+        invalidUri: String
+    ) {
         ThrowableAssert.catchThrowableOfType({ invalidUri.toURI() }, MalformedURLException::class.java)
     }
 }

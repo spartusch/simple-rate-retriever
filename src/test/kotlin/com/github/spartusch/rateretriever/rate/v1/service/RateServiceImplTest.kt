@@ -2,20 +2,28 @@ package com.github.spartusch.rateretriever.rate.v1.service
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.SimpleRateRetrieverProperties
 import com.github.spartusch.rateretriever.rate.v1.exception.NotFoundException
+import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
+import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
 import com.github.spartusch.rateretriever.rate.v1.provider.RateProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import java.math.BigDecimal
+import java.util.Currency
+import java.util.Locale
 
 class RateServiceImplTest {
 
     private lateinit var provider: RateProvider
     private lateinit var cut: RateServiceImpl
+
+    private val providerId = ProviderId("provider")
+    private val symbol = TradeSymbol("etf110")
+    private val currency = Currency.getInstance("EUR")
+    private val locale = Locale.forLanguageTag("de-DE")
 
     @BeforeEach
     fun setUp() {
@@ -28,24 +36,17 @@ class RateServiceImplTest {
 
     @Test
     fun isRegisteredProviderOrThrow_returnsTrueForConfiguredProvider() {
-        given(provider.getProviderId()).willReturn("youKnowMe")
-        val ret = cut.isRegisteredProviderOrThrow("youKnowMe")
-        assertThat(ret).isTrue()
-    }
-
-    @Test
-    fun isRegisteredProviderOrThrow_returnsTrueForConfiguredProviderIgnoringCase() {
-        given(provider.getProviderId()).willReturn("YoUkNoWmE")
-        val ret = cut.isRegisteredProviderOrThrow("youKNOWme")
+        given(provider.getProviderId()).willReturn(ProviderId("youKnowMe"))
+        val ret = cut.isRegisteredProviderOrThrow(ProviderId("youKnowMe"))
         assertThat(ret).isTrue()
     }
 
     @Test
     fun isRegisteredProviderOrThrow_throwsForUnknownProvider() {
-        given(provider.getProviderId()).willReturn("youKnowMe")
+        given(provider.getProviderId()).willReturn(ProviderId("youKnowMe"))
 
         val e = ThrowableAssert.catchThrowableOfType({
-            cut.isRegisteredProviderOrThrow("unknown")
+            cut.isRegisteredProviderOrThrow(ProviderId("unknown"))
         }, NotFoundException::class.java)
 
         assertThat(e).hasMessageContaining("unknown") // must include unknown id
@@ -55,7 +56,7 @@ class RateServiceImplTest {
     fun isRegisteredProviderOrThrow_throwsIfNoProvidersAreConfigured() {
         cut = RateServiceImpl(SimpleRateRetrieverProperties(0), listOf())
         ThrowableAssert.catchThrowableOfType({
-            cut.isRegisteredProviderOrThrow("unknown")
+            cut.isRegisteredProviderOrThrow(ProviderId("unknown"))
         }, NotFoundException::class.java)
     }
 
@@ -63,22 +64,22 @@ class RateServiceImplTest {
 
     @Test
     fun getCurrentRate_happyCase() {
-        given(provider.getProviderId()).willReturn("provider")
-        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
-        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34"))
+        given(provider.getProviderId()).willReturn(providerId)
+        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
 
-        val rate = cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+        val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
         assertThat(rate).isEqualTo("12,3400")
     }
 
     @Test
     fun getCurrentRate_normalizesToUpperCase() {
-        given(provider.getProviderId()).willReturn("provider")
-        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
-        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34"))
+        given(provider.getProviderId()).willReturn(providerId)
+        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
 
-        val rate = cut.getCurrentRate("provider", "sym", "eur", "de-DE")
+        val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
         assertThat(rate).isNotBlank()
     }
@@ -86,46 +87,46 @@ class RateServiceImplTest {
     @Test
     fun getCurrentRate_fractionDigitsIsConfigurable() {
         cut = RateServiceImpl(SimpleRateRetrieverProperties(fractionDigits = 6), listOf(provider))
-        given(provider.getProviderId()).willReturn("provider")
-        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
-        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34"))
+        given(provider.getProviderId()).willReturn(providerId)
+        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
 
-        val rate = cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+        val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
         assertThat(rate).isEqualTo("12,340000")
     }
 
     @Test
     fun getCurrentRate_fractionDigitsAreRoundedAtTheLastDigit() {
-        given(provider.getProviderId()).willReturn("provider")
-        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
-        given(provider.getCurrentRate("SYM", "EUR")).willReturn(BigDecimal("12.34567"))
+        given(provider.getProviderId()).willReturn(providerId)
+        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34567"))
 
-        val rate = cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+        val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
         assertThat(rate).isEqualTo("12,3457")
     }
 
     @Test
     fun getCurrentRate_throwsIfCurrencyCodeIsNotSupported() {
-        given(provider.getProviderId()).willReturn("provider")
-        given(provider.isCurrencyCodeSupported(anyString())).willReturn(false)
+        given(provider.getProviderId()).willReturn(providerId)
+        given(provider.isCurrencyCodeSupported(currency)).willReturn(false)
 
         val e = ThrowableAssert.catchThrowableOfType({
-            cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+            cut.getCurrentRate(providerId, symbol, currency, locale)
         }, IllegalArgumentException::class.java)
 
-        assertThat(e).hasMessageContaining("EUR") // should report unsupported currency code
+        assertThat(e).hasMessageContaining(currency.displayName) // should report unsupported currency code
     }
 
     @Test
     fun getCurrentRate_throwsIfFetchingRatesThrowsThrowable() {
-        given(provider.getProviderId()).willReturn("provider")
-        given(provider.isCurrencyCodeSupported("EUR")).willReturn(true)
-        given(provider.getCurrentRate(anyString(), anyString())).willThrow(Error("some error"))
+        given(provider.getProviderId()).willReturn(providerId)
+        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.getCurrentRate(symbol, currency)).willThrow(Error("some error"))
 
         val e = ThrowableAssert.catchThrowableOfType({
-            cut.getCurrentRate("provider", "SYM", "EUR", "de-DE")
+            cut.getCurrentRate(providerId, symbol, currency, locale)
         }, RuntimeException::class.java)
 
         assertThat(e).hasMessageContaining("some error")
@@ -133,9 +134,9 @@ class RateServiceImplTest {
 
     @Test
     fun getCurrentRate_throwsIfProviderIsUnknown() {
-        given(provider.getProviderId()).willReturn("provider")
+        given(provider.getProviderId()).willReturn(providerId)
         ThrowableAssert.catchThrowableOfType({
-            cut.getCurrentRate("youDontKnowMe", "SYM", "EUR", "de-DE")
+            cut.getCurrentRate(ProviderId("youDontKnowMe"), symbol, currency, locale)
         }, NotFoundException::class.java)
     }
 }

@@ -61,7 +61,9 @@ class HttpClientExtensionsIT {
 
     @ParameterizedTest
     @ValueSource(ints = [200, 201, 301, 302, 399])
-    fun getUrl_returnsContentForSuccessfulRequests(statusCode: Int) {
+    fun getUrl_returnsContentForSuccessfulRequests(
+        statusCode: Int
+    ) {
         stubResponse(uriPath, "test response", statusCode)
         val response = cut.getUrl(uri, "", timer)
         assertThat(response).isEqualTo("test response")
@@ -69,7 +71,9 @@ class HttpClientExtensionsIT {
 
     @ParameterizedTest
     @ValueSource(ints = [400, 401, 403, 404, 410, 500, 503])
-    fun getUrl_throwsExceptionIfGettingErrorStatusCode(statusCode: Int) {
+    fun getUrl_throwsExceptionIfGettingErrorStatusCode(
+        statusCode: Int
+    ) {
         stubResponse(uriPath, "", statusCode)
         val e = ThrowableAssert.catchThrowableOfType({ cut.getUrl(uri, "", timer) }, RequestException::class.java)
         assertThat(e).hasMessageContaining(uriPath)

@@ -15,7 +15,11 @@ private val log = LoggerFactory.getLogger("RateProviderExtensionsKt")
 @Suppress("MagicNumber")
 private val validStatusCodeRange = 1..399
 
-internal fun HttpClient.getUrl(uri: URI, accept: String, requestTimer: Timer): String {
+internal fun HttpClient.getUrl(
+    uri: URI,
+    accept: String,
+    requestTimer: Timer
+): String {
     val request = HttpRequest.newBuilder(uri)
             .header("User-Agent", USER_AGENT)
             .header("Accept", accept)
