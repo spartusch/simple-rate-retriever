@@ -1,6 +1,5 @@
 package com.github.spartusch.rateretriever.rate.v1.controller
 
-import com.github.spartusch.rateretriever.rate.v1.exception.NotFoundException
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
 import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
 import com.github.spartusch.rateretriever.rate.v1.service.RateService
@@ -51,12 +50,6 @@ class RateController(private val rateService: RateService, private val webQueryS
         requestUri: String,
         locale: Locale
     ) = requestUri.replaceAfterLast('/', "?locale=$locale")
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    fun handleException(
-        e: NotFoundException
-    ): String? = e.localizedMessage
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)

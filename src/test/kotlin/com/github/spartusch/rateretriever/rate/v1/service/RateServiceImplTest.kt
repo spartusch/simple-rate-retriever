@@ -1,7 +1,6 @@
 package com.github.spartusch.rateretriever.rate.v1.service
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.SimpleRateRetrieverProperties
-import com.github.spartusch.rateretriever.rate.v1.exception.NotFoundException
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
 import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
 import com.github.spartusch.rateretriever.rate.v1.provider.RateProvider
@@ -47,7 +46,7 @@ class RateServiceImplTest {
 
         val e = ThrowableAssert.catchThrowableOfType({
             cut.isRegisteredProviderOrThrow(ProviderId("unknown"))
-        }, NotFoundException::class.java)
+        }, IllegalArgumentException::class.java)
 
         assertThat(e).hasMessageContaining("unknown") // must include unknown id
     }
@@ -57,7 +56,7 @@ class RateServiceImplTest {
         cut = RateServiceImpl(SimpleRateRetrieverProperties(0), listOf())
         ThrowableAssert.catchThrowableOfType({
             cut.isRegisteredProviderOrThrow(ProviderId("unknown"))
-        }, NotFoundException::class.java)
+        }, IllegalArgumentException::class.java)
     }
 
     // getCurrentRate
@@ -137,6 +136,6 @@ class RateServiceImplTest {
         given(provider.getProviderId()).willReturn(providerId)
         ThrowableAssert.catchThrowableOfType({
             cut.getCurrentRate(ProviderId("youDontKnowMe"), symbol, currency, locale)
-        }, NotFoundException::class.java)
+        }, IllegalArgumentException::class.java)
     }
 }

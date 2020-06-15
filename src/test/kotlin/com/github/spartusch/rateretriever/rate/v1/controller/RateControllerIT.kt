@@ -1,7 +1,6 @@
 package com.github.spartusch.rateretriever.rate.v1.controller
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.RequestLoggingFilterProperties
-import com.github.spartusch.rateretriever.rate.v1.exception.NotFoundException
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
 import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
 import com.github.spartusch.rateretriever.rate.v1.service.RateService
@@ -76,22 +75,10 @@ class RateControllerIT {
     @Test
     fun getCurrentRate_IllegalArgumentException() {
         given(rateService.getCurrentRate(providerId, symbol, currency, defaultLocale))
-                .willThrow(java.lang.IllegalArgumentException("err_msg"))
+            .willThrow(IllegalArgumentException("err_msg"))
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR"))
-                .andExpect(status().isBadRequest)
-                .andReturn()
-
-        assertThat(result.response.contentAsString).contains("err_msg")
-    }
-
-    @Test
-    fun getCurrentRate_NotFoundException() {
-        given(rateService.getCurrentRate(providerId, symbol, currency, defaultLocale))
-            .willThrow(NotFoundException("err_msg"))
-
-        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR"))
-            .andExpect(status().isNotFound)
+            .andExpect(status().isBadRequest)
             .andReturn()
 
         assertThat(result.response.contentAsString).contains("err_msg")

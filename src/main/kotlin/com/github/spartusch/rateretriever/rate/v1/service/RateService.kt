@@ -1,7 +1,6 @@
 package com.github.spartusch.rateretriever.rate.v1.service
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.SimpleRateRetrieverProperties
-import com.github.spartusch.rateretriever.rate.v1.exception.NotFoundException
 import com.github.spartusch.rateretriever.rate.v1.exception.UnexpectedException
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
 import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
@@ -55,7 +54,7 @@ class RateServiceImpl(
     private fun getProviderOrThrow(
         providerId: ProviderId
     ) = rateProviders.find { provider -> provider.getProviderId() == providerId }
-        ?: throw NotFoundException("No rate provider found for id '$providerId'")
+        ?: throw IllegalArgumentException("No rate provider found for id '$providerId'")
 
     override fun isRegisteredProviderOrThrow(
         providerId: ProviderId
