@@ -1,0 +1,20 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.pinterest.ktlint:ktlint-core:0.38.1
+com.pinterest.ktlint:ktlint-ruleset-experimental:0.38.1
+com.pinterest.ktlint:ktlint-ruleset-standard:0.38.1
+io.gitlab.arturbosch.detekt:detekt-api:1.12.0
+io.gitlab.arturbosch.detekt:detekt-bom:1.12.0
+io.gitlab.arturbosch.detekt:detekt-formatting:1.12.0
+io.gitlab.arturbosch.detekt:detekt-psi-utils:1.12.0
+org.ec4j.core:ec4j-core:0.2.2
+org.jetbrains.intellij.deps:trove4j:1.0.20181211
+org.jetbrains.kotlin:kotlin-compiler-embeddable:1.4.0
+org.jetbrains.kotlin:kotlin-daemon-embeddable:1.4.0
+org.jetbrains.kotlin:kotlin-reflect:1.4.0
+org.jetbrains.kotlin:kotlin-script-runtime:1.4.0
+org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0
+org.jetbrains.kotlin:kotlin-stdlib:1.4.0
+org.jetbrains:annotations:13.0
+org.yaml:snakeyaml:1.26

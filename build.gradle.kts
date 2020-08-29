@@ -1,27 +1,19 @@
-
 plugins {
-    val kotlinVersion = "1.3.72"
+    val kotlinVersion = "1.4.0"
 
     kotlin("jvm") version kotlinVersion
-    id("org.jetbrains.kotlin.plugin.spring") version kotlinVersion
-    id("org.springframework.boot") version "2.3.1.RELEASE"
-    id("io.spring.dependency-management") version "1.0.9.RELEASE"
+    kotlin("plugin.spring") version kotlinVersion
+    id("org.springframework.boot") version "2.3.3.RELEASE"
+    id("io.spring.dependency-management") version "1.0.10.RELEASE"
 
-    id("com.gorylenko.gradle-git-properties") version "2.2.2"
-    id("io.gitlab.arturbosch.detekt") version "1.9.1"
+    id("com.gorylenko.gradle-git-properties") version "2.2.3"
+    id("io.gitlab.arturbosch.detekt") version "1.12.0"
 }
 
-object Versions {
-    object Dependencies {
-        const val excelWebQuery = "2.0.0-SNAPSHOT"
-        const val springBootAdmin = "2.2.3"
-        const val detektVersion = "1.9.1"
-        const val wiremock = "2.26.3"
-        const val wiremockExtension = "0.4.0"
-    }
-    const val jvmTarget = "11"
-    const val projectVersion = "2.0.0-SNAPSHOT"
-}
+val jvmTarget = "11"
+
+group = "com.github.spartusch"
+version = "2.0.0-SNAPSHOT"
 
 repositories {
     mavenLocal()
@@ -30,6 +22,10 @@ repositories {
     maven { url = uri("https://jitpack.io") } // required for com.github.JensPiegsa:wiremock-extension
 }
 
+configurations
+    .filter { it.name.endsWith("compileClasspath", ignoreCase = true) || it.name == "detektPlugins" }
+    .forEach { it.resolutionStrategy.activateDependencyLocking() }
+
 dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
@@ -37,22 +33,19 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("com.github.spartusch:excel-web-query:${Versions.Dependencies.excelWebQuery}")
+    implementation("com.github.spartusch:excel-web-query:2.+")
 
     // Monitoring
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("de.codecentric:spring-boot-admin-starter-client:${Versions.Dependencies.springBootAdmin}")
+    implementation("de.codecentric:spring-boot-admin-starter-client:2.+")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("com.github.tomakehurst:wiremock-standalone:${Versions.Dependencies.wiremock}")
-    testImplementation("com.github.JensPiegsa:wiremock-extension:${Versions.Dependencies.wiremockExtension}")
+    testImplementation("com.github.tomakehurst:wiremock-standalone:2.+")
+    testImplementation("com.github.JensPiegsa:wiremock-extension:0.4.+")
 
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${Versions.Dependencies.detektVersion}")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.+")
 }
-
-group = "com.github.spartusch"
-version = Versions.projectVersion
 
 springBoot {
     buildInfo()
@@ -64,7 +57,7 @@ detekt {
 
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = Versions.jvmTarget
+        kotlinOptions.jvmTarget = jvmTarget
     }
 
     test {
