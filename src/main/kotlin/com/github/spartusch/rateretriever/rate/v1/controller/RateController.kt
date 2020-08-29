@@ -41,15 +41,15 @@ class RateController(private val rateService: RateService, private val webQueryS
         request: HttpServletRequest
     ): HttpEntity<ByteArray> {
         require(rateService.isRegisteredProviderOrThrow(providerId))
-        return removeIqyIndicator(request.requestURI, locale)
+        return removeIqyIndicator(request.requestURL.toString(), locale)
             .let { rateEndpoint -> webQueryService.getWebQueryEntity(rateEndpoint, symbol, currency) }
     }
 
     // Remove "/iqy" suffix from the request URI so the web query will call the actual rate endpoint
     private fun removeIqyIndicator(
-        requestUri: String,
+        requestUrl: String,
         locale: Locale
-    ) = requestUri.replaceAfterLast('/', "?locale=$locale")
+    ) = requestUrl.replaceAfterLast('/', "?locale=$locale")
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
