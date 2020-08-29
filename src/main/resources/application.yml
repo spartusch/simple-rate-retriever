@@ -26,5 +26,6 @@ simple-rate-retriever:
 
 logging:
   level:
-    org.springframework: INFO
     com.github.spartusch: DEBUG
+    de.codecentric: INFO
+    org.springframework: INFO
