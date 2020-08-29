@@ -1,5 +1,5 @@
 
-server.port: 18091
+server.port: 8080
 
 spring:
   application.name: simple-rate-retriever
