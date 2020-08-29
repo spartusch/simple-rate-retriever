@@ -42,7 +42,7 @@ class OnVistaRateProvider(private val properties: OnVistaProperties) : RateProvi
 
     private fun getSearchUri(
         symbol: TradeSymbol
-    ) = "${properties.uri}$symbol".toURI()
+    ) = symbol.map { sym -> "${properties.uri}$sym".toURI() }
 
     private fun getAssetUri(
         symbol: TradeSymbol

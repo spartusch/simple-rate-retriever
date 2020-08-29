@@ -1,3 +1,3 @@
 package com.github.spartusch.rateretriever.rate.v1.model
 
-class ProviderId(id: String) : BoxedValue<String>(id)
+data class ProviderId(override val value: String) : ValueWrapper<String>

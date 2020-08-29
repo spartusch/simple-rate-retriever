@@ -1,6 +1,7 @@
 package com.github.spartusch.rateretriever.rate.v1.provider
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.OnVistaProperties
+import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,7 +23,7 @@ class OnVistaRateProviderTest {
 
     @Test
     fun getProviderId_returnsConfiguredId() {
-        assertThat(cut.getProviderId()).isEqualTo("someId")
+        assertThat(cut.getProviderId()).isEqualTo(ProviderId("someId"))
     }
 
     //  isCurrencyCodeSupported

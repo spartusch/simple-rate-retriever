@@ -29,7 +29,7 @@ class WebQueryServiceImpl : WebQueryService {
         headers[HttpHeaders.CONTENT_TYPE] = webQuery.contentType
         headers[HttpHeaders.CONTENT_LENGTH] = webQuery.contentLength.toString()
         headers[HttpHeaders.CONTENT_DISPOSITION] =
-            WebQuery.getContentDisposition("${symbol}_$currency.iqy")
+            WebQuery.getContentDisposition(symbol.map { sym -> "${sym}_$currency.iqy" })
 
         return HttpEntity(webQuery.contentBytes, headers)
     }

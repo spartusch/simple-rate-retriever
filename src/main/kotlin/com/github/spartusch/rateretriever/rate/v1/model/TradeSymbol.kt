@@ -1,3 +1,3 @@
 package com.github.spartusch.rateretriever.rate.v1.model
 
-class TradeSymbol(symbol: String) : BoxedValue<String>(symbol)
+data class TradeSymbol(override val value: String) : ValueWrapper<String>

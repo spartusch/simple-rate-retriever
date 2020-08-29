@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,6 +42,7 @@ class RateControllerIT {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
+    private val base = "http://localhost"
     private val providerId = ProviderId("provider")
     private val symbol = TradeSymbol("sym")
     private val currency = Currency.getInstance("EUR")
@@ -113,10 +115,10 @@ class RateControllerIT {
         headers[HttpHeaders.CONTENT_DISPOSITION] = "contentDisposition"
         headers[HttpHeaders.CONTENT_TYPE] = MediaType.APPLICATION_OCTET_STREAM_VALUE
         given(rateService.isRegisteredProviderOrThrow(providerId)).willReturn(true)
-        given(webQueryService.getWebQueryEntity("/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency))
-                .willReturn(HttpEntity("test".toByteArray(), headers))
+        `when`(webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency))
+            .thenReturn(HttpEntity("test".toByteArray(), headers))
 
-        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR/iqy?locale=loc"))
+        val result = mockMvc.perform(get("$base/rate/v1/provider/sym/EUR/iqy?locale=loc"))
                 .andExpect(status().isOk)
                 .andExpect(header().string("Content-Disposition", "contentDisposition"))
                 .andExpect(header().string("Content-Type", MediaType.APPLICATION_OCTET_STREAM_VALUE))
@@ -134,7 +136,7 @@ class RateControllerIT {
                 .andReturn()
 
         verify(webQueryService, times(1))
-                .getWebQueryEntity("/rate/v1/provider/sym/EUR/?locale=en_US", symbol, currency)
+                .getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=en_US", symbol, currency)
     }
 
     @Test
@@ -146,7 +148,7 @@ class RateControllerIT {
     @Test
     fun downloadIqyFileForRequest_IllegalArgumentException() {
         given(rateService.isRegisteredProviderOrThrow(providerId)).willReturn(true)
-        given(webQueryService.getWebQueryEntity("/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency))
+        given(webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency))
                 .willThrow(java.lang.IllegalArgumentException("err_msg"))
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR/iqy?locale=loc"))
@@ -159,7 +161,7 @@ class RateControllerIT {
     @Test
     fun downloadIqyFileForRequest_RuntimeException() {
         given(rateService.isRegisteredProviderOrThrow(providerId)).willReturn(true)
-        given(webQueryService.getWebQueryEntity("/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency))
+        given(webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency))
                 .willThrow(java.lang.RuntimeException("err_msg"))
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR/iqy?locale=loc"))
