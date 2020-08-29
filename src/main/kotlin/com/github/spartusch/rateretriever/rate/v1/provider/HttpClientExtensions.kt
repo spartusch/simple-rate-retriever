@@ -24,10 +24,10 @@ internal fun HttpClient.getUrl(
             .header("User-Agent", USER_AGENT)
             .header("Accept", accept)
             .build()
-    log.info("Fetching {} as '{}' ...", uri, accept)
+    log.debug("Fetching {} as '{}' ...", uri, accept)
     return requestTimer.recordCallable {
         this.send(request, HttpResponse.BodyHandlers.ofString())
-                .also { log.info("Response status code: {}", it.statusCode()) }
+                .also { log.debug(" -> Status code: {}", it.statusCode()) }
                 .takeIf { it.statusCode() in validStatusCodeRange }
                 ?.body()
     } ?: throw RequestException("Couldn't fetch $uri")
