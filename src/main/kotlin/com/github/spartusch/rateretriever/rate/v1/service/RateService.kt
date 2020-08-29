@@ -46,7 +46,7 @@ class RateServiceImpl(
                 .getCurrentRate(symbol, currency)
                 ?.let { rate -> formatRate(rate, locale) }
         } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
-            log.error("Error fetching '$symbol' ('$currency'/'$locale') from '${provider.getProviderId()}'", e)
+            log.error("Error fetching $symbol ('$currency'/'$locale') from ${provider.getProviderId()}", e)
             throw UnexpectedException(e.localizedMessage, e)
         }
     }
