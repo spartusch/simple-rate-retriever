@@ -14,6 +14,8 @@ RUN ./gradlew --no-daemon bootJar && java -Djarmode=layertools -jar build/libs/*
 FROM adoptopenjdk:11-jre-hotspot
 EXPOSE 8080
 ENV server.port 8080
+RUN adduser --system --group spring
+USER spring:spring
 WORKDIR /application
 COPY --from=builder /application/dependencies .
 COPY --from=builder /application/spring-boot-loader .
