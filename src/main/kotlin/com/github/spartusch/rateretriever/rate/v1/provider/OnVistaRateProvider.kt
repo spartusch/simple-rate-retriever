@@ -12,6 +12,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.util.Currency
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class OnVistaRateProvider(
@@ -21,7 +22,7 @@ class OnVistaRateProvider(
 ) : AbstractTimedRateProvider(meterRegistry) {
 
     private val providerId = ProviderId(properties.id)
-    private val symbolToUriCache = mutableMapOf<TradeSymbol, URI>()
+    private val symbolToUriCache = ConcurrentHashMap<TradeSymbol, URI>()
 
     private val assetLinkRegex = "\"snapshotlink\":\"([^\"]+)\"".toRegex()
     private val amountRegex = ("<span class=\"price\">([0-9,.]+) EUR</span>" +

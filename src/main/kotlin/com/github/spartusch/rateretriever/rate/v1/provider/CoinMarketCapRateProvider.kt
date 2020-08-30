@@ -14,6 +14,7 @@ import java.math.BigDecimal
 import java.net.URI
 import java.net.http.HttpClient
 import java.util.Currency
+import java.util.concurrent.ConcurrentHashMap
 
 @Serializable
 private data class CmcStatus(
@@ -66,7 +67,7 @@ class CoinMarketCapRateProvider(
 ) : AbstractTimedRateProvider(meterRegistry) {
 
     private val providerId = ProviderId(properties.id)
-    private val currencyToCmcIdCache = mutableMapOf<Currency, Long?>()
+    private val currencyToCmcIdCache = ConcurrentHashMap<Currency, Long?>()
 
     private val format = Json {
         ignoreUnknownKeys = true
