@@ -19,7 +19,8 @@ simple-rate-retriever:
   providers:
     coin-market-cap:
       id: 'coinmarket'
-      uri: 'https://api.coinmarketcap.com/v1/ticker/'
+      uri: 'https://pro-api.coinmarketcap.com/v1'
+      api-key: ${CMC_API_KEY:}
     on-vista:
       id: 'stockexchange'
       uri: 'https://www.onvista.de/api/header/search?q='

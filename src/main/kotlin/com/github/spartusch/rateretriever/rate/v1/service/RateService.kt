@@ -40,10 +40,9 @@ class RateServiceImpl(
         currency: Currency,
         locale: Locale
     ): String? {
-        require(provider.isCurrencyCodeSupported(currency)) { "Provider doesn't support ${currency.displayName}" }
+        require(provider.isCurrencySupported(currency)) { "Provider doesn't support ${currency.displayName}" }
         return try {
-            provider
-                .getCurrentRate(symbol, currency)
+            provider.getCurrentRate(symbol, currency)
                 ?.let { rate -> formatRate(rate, locale) }
         } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
             log.error("Error fetching $symbol ('$currency'/'$locale') from ${provider.getProviderId()}", e)

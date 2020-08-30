@@ -4,7 +4,7 @@ import com.github.spartusch.rateretriever.rate.v1.configuration.OnVistaPropertie
 import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
 import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
-import io.micrometer.core.instrument.Metrics
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -14,12 +14,14 @@ import java.util.Currency
 import java.util.Locale
 
 @Service
-class OnVistaRateProvider(private val properties: OnVistaProperties) : RateProvider {
+class OnVistaRateProvider(
+    private val properties: OnVistaProperties,
+    private val meterRegistry: MeterRegistry,
+    private val httpClient: HttpClient,
+) : AbstractTimedRateProvider(meterRegistry) {
 
     private val providerId = ProviderId(properties.id)
     private val symbolToUriCache = mutableMapOf<TradeSymbol, URI>()
-    private val requestTimer = Metrics.timer("provider.requests", "provider.name", "OnVistaRateProvider")
-    private val httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()
 
     private val assetLinkRegex = "\"snapshotlink\":\"([^\"]+)\"".toRegex()
     private val amountRegex = ("<span class=\"price\">([0-9,.]+) EUR</span>" +
@@ -36,9 +38,7 @@ class OnVistaRateProvider(private val properties: OnVistaProperties) : RateProvi
 
     override fun getProviderId() = providerId
 
-    override fun isCurrencyCodeSupported(
-        currency: Currency
-    ) = "EUR" == currency.currencyCode
+    override fun isCurrencySupported(currency: Currency) = ("EUR" == currency.currencyCode)
 
     private fun getSearchUri(
         symbol: TradeSymbol
@@ -47,8 +47,7 @@ class OnVistaRateProvider(private val properties: OnVistaProperties) : RateProvi
     private fun getAssetUri(
         symbol: TradeSymbol
     ) = symbolToUriCache.computeIfAbsent(symbol) {
-        httpClient
-            .getUrl(getSearchUri(symbol), MediaType.APPLICATION_JSON_VALUE, requestTimer)
+        httpClient.getUrl(requestTimer, getSearchUri(symbol))
             .let { searchPage -> assetLinkRegex.extractFirst(searchPage) }
             ?.toURI()
             ?: throw DataExtractionException("Asset link not found")
@@ -59,8 +58,7 @@ class OnVistaRateProvider(private val properties: OnVistaProperties) : RateProvi
         symbol: TradeSymbol,
         currency: Currency
     ): BigDecimal = try {
-        httpClient
-            .getUrl(getAssetUri(symbol), MediaType.TEXT_HTML_VALUE, requestTimer)
+        httpClient.getUrl(requestTimer, getAssetUri(symbol), MediaType.TEXT_HTML_VALUE)
             .let { assetPage -> amountRegex.extractFirst(assetPage) }
             ?.toBigDecimal(Locale.GERMANY)
             ?: throw DataExtractionException("Amount not found")

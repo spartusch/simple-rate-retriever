@@ -64,7 +64,7 @@ class RateServiceImplTest {
     @Test
     fun getCurrentRate_happyCase() {
         given(provider.getProviderId()).willReturn(providerId)
-        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.isCurrencySupported(currency)).willReturn(true)
         given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
@@ -75,7 +75,7 @@ class RateServiceImplTest {
     @Test
     fun getCurrentRate_normalizesToUpperCase() {
         given(provider.getProviderId()).willReturn(providerId)
-        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.isCurrencySupported(currency)).willReturn(true)
         given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
@@ -87,7 +87,7 @@ class RateServiceImplTest {
     fun getCurrentRate_fractionDigitsIsConfigurable() {
         cut = RateServiceImpl(SimpleRateRetrieverProperties(fractionDigits = 6), listOf(provider))
         given(provider.getProviderId()).willReturn(providerId)
-        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.isCurrencySupported(currency)).willReturn(true)
         given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
@@ -98,7 +98,7 @@ class RateServiceImplTest {
     @Test
     fun getCurrentRate_fractionDigitsAreRoundedAtTheLastDigit() {
         given(provider.getProviderId()).willReturn(providerId)
-        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.isCurrencySupported(currency)).willReturn(true)
         given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34567"))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
@@ -109,7 +109,7 @@ class RateServiceImplTest {
     @Test
     fun getCurrentRate_throwsIfCurrencyCodeIsNotSupported() {
         given(provider.getProviderId()).willReturn(providerId)
-        given(provider.isCurrencyCodeSupported(currency)).willReturn(false)
+        given(provider.isCurrencySupported(currency)).willReturn(false)
 
         val e = ThrowableAssert.catchThrowableOfType({
             cut.getCurrentRate(providerId, symbol, currency, locale)
@@ -121,7 +121,7 @@ class RateServiceImplTest {
     @Test
     fun getCurrentRate_throwsIfFetchingRatesThrowsThrowable() {
         given(provider.getProviderId()).willReturn(providerId)
-        given(provider.isCurrencyCodeSupported(currency)).willReturn(true)
+        given(provider.isCurrencySupported(currency)).willReturn(true)
         given(provider.getCurrentRate(symbol, currency)).willThrow(Error("some error"))
 
         val e = ThrowableAssert.catchThrowableOfType({

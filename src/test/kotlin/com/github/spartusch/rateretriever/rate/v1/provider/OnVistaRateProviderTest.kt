@@ -2,11 +2,14 @@ package com.github.spartusch.rateretriever.rate.v1.provider
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.OnVistaProperties
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.Mockito
+import java.net.http.HttpClient
 import java.util.Currency
 
 class OnVistaRateProviderTest {
@@ -18,7 +21,8 @@ class OnVistaRateProviderTest {
     @BeforeEach
     fun setUp() {
         properties = OnVistaProperties("someId", "/api/header/search?q=")
-        cut = OnVistaRateProvider(properties)
+        val httpClient = Mockito.mock(HttpClient::class.java)
+        cut = OnVistaRateProvider(properties, SimpleMeterRegistry(), httpClient)
     }
 
     @Test
@@ -26,21 +30,21 @@ class OnVistaRateProviderTest {
         assertThat(cut.getProviderId()).isEqualTo(ProviderId("someId"))
     }
 
-    //  isCurrencyCodeSupported
+    //  isCurrencySupported
 
     @ParameterizedTest
     @ValueSource(strings = ["EUR"])
-    fun isCurrencyCodeSupported_supportedCodes(
+    fun isCurrencySupported_supportedCodes(
         currencyCode: String
     ) {
-        assertThat(cut.isCurrencyCodeSupported(Currency.getInstance(currencyCode))).isTrue()
+        assertThat(cut.isCurrencySupported(Currency.getInstance(currencyCode))).isTrue()
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["USD"])
-    fun isCurrencyCodeSupported_unsupportedCodes(
+    fun isCurrencySupported_unsupportedCodes(
         currencyCode: String
     ) {
-        assertThat(cut.isCurrencyCodeSupported(Currency.getInstance(currencyCode))).isFalse()
+        assertThat(cut.isCurrencySupported(Currency.getInstance(currencyCode))).isFalse()
     }
 }

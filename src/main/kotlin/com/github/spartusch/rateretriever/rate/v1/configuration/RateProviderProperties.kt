@@ -20,5 +20,6 @@ data class OnVistaProperties(
 @ConfigurationProperties(prefix = "simple-rate-retriever.providers.coin-market-cap")
 data class CoinMarketCapProperties(
     override val id: String,
-    override val uri: String
+    override val uri: String,
+    val apiKey: String
 ) : RateProviderProperties

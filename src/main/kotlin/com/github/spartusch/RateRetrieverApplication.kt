@@ -8,9 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 @ConfigurationPropertiesScan
 class RateRetrieverApplication
 
-fun main(
-    args: Array<String>
-) {
+fun main(args: Array<String>) {
     @Suppress("SpreadOperator")
     SpringApplication.run(RateRetrieverApplication::class.java, *args)
 }

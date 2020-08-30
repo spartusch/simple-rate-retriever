@@ -5,9 +5,7 @@ import java.net.URI
 import java.text.NumberFormat
 import java.util.Locale
 
-internal fun String.toBigDecimal(
-    locale: Locale
-): BigDecimal {
+internal fun String.toBigDecimal(locale: Locale): BigDecimal {
     val numberFormat = NumberFormat.getNumberInstance(locale)
     return BigDecimal(numberFormat.parse(this).toString())
 }

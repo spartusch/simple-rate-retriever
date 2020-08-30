@@ -12,11 +12,13 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.net.http.HttpClient
 import java.util.Currency
 
 private const val SEARCH_URL = "/api/header/search?q=foo"
@@ -41,7 +43,7 @@ class OnVistaRateProviderIT {
     @BeforeEach
     fun setUp() {
         properties = OnVistaProperties("id", "${serverMock.baseUrl()}/api/header/search?q=")
-        cut = OnVistaRateProvider(properties)
+        cut = OnVistaRateProvider(properties, SimpleMeterRegistry(), HttpClient.newHttpClient())
     }
 
     private fun stubSearchPage(assetLink: String, statusCode: Int = 200) {

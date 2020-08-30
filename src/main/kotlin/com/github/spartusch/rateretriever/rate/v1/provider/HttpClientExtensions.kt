@@ -3,6 +3,7 @@ package com.github.spartusch.rateretriever.rate.v1.provider
 import com.github.spartusch.rateretriever.rate.v1.exception.RequestException
 import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
+import org.springframework.http.MediaType
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -16,19 +17,32 @@ private val log = LoggerFactory.getLogger("RateProviderExtensionsKt")
 private val validStatusCodeRange = 1..399
 
 internal fun HttpClient.getUrl(
+    requestTimer: Timer,
     uri: URI,
-    accept: String,
-    requestTimer: Timer
+    accept: String = MediaType.APPLICATION_JSON_VALUE,
+    additionalHeaders: List<String> = listOf()
 ): String {
+    val headers = mutableListOf(
+        "User-Agent", USER_AGENT,
+        "Accept", accept
+    )
+    headers.addAll(additionalHeaders)
+
+    @Suppress("SpreadOperator")
     val request = HttpRequest.newBuilder(uri)
-            .header("User-Agent", USER_AGENT)
-            .header("Accept", accept)
-            .build()
+        .headers(*headers.toTypedArray())
+        .build()
+
     log.debug("Fetching {} as '{}' ...", uri, accept)
-    return requestTimer.recordCallable {
+
+    val body = requestTimer.recordCallable {
         this.send(request, HttpResponse.BodyHandlers.ofString())
-                .also { log.debug(" -> Status code: {}", it.statusCode()) }
-                .takeIf { it.statusCode() in validStatusCodeRange }
-                ?.body()
+            .also { log.debug(" -> Status code: {}", it.statusCode()) }
+            .takeIf { it.statusCode() in validStatusCodeRange }
+            ?.body()
     } ?: throw RequestException("Couldn't fetch $uri")
+
+    log.trace(" -> Body: {}", body)
+
+    return body
 }

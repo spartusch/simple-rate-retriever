@@ -1,4 +1,6 @@
 #!/bin/sh
 
+declare $(env -i `cat bin/secrets.vars`)
+
 ./gradlew -PgenerateLaunchScript bootJar
-./build/libs/simple-rate-retriever*.jar --spring.boot.admin.client.url=http://localhost:18000
+./build/libs/simple-rate-retriever*.jar --CMC_API_KEY=$cmc_api_key --spring.boot.admin.client.url=http://localhost:18000

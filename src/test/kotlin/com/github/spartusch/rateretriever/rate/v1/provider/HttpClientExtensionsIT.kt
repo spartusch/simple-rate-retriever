@@ -8,7 +8,7 @@ import com.github.spartusch.rateretriever.rate.v1.exception.RequestException
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-import io.micrometer.core.instrument.Timer
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.BeforeEach
@@ -18,9 +18,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.net.URI
 import java.net.http.HttpClient
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
-import java.util.function.Supplier
 
 @ExtendWith(WireMockExtension::class)
 class HttpClientExtensionsIT {
@@ -31,21 +28,7 @@ class HttpClientExtensionsIT {
     @ConfigureWireMock
     private val options = WireMockConfiguration.wireMockConfig().dynamicPort()
 
-    private val timer = object : Timer {
-        var recordCalled = false
-
-        override fun <T : Any?> recordCallable(f: Callable<T>): T { recordCalled = true; return f.call() }
-        override fun <T : Any?> record(f: Supplier<T>): T { recordCalled = true; return f.get() }
-        override fun record(f: Runnable) { recordCalled = true; f.run() }
-
-        override fun record(amount: Long, unit: TimeUnit) = TODO()
-        override fun takeSnapshot() = TODO()
-        override fun getId() = TODO()
-        override fun max(unit: TimeUnit) = TODO()
-        override fun count() = TODO()
-        override fun totalTime(unit: TimeUnit) = TODO()
-        override fun baseTimeUnit() = TODO()
-    }
+    private val timer = SimpleMeterRegistry().timer("testTimer")
 
     private lateinit var uri: URI
     private lateinit var uriPath: String
@@ -65,7 +48,7 @@ class HttpClientExtensionsIT {
         statusCode: Int
     ) {
         stubResponse(uriPath, "test response", statusCode)
-        val response = cut.getUrl(uri, "", timer)
+        val response = cut.getUrl(timer, uri, "")
         assertThat(response).isEqualTo("test response")
     }
 
@@ -75,25 +58,39 @@ class HttpClientExtensionsIT {
         statusCode: Int
     ) {
         stubResponse(uriPath, "", statusCode)
-        val e = ThrowableAssert.catchThrowableOfType({ cut.getUrl(uri, "", timer) }, RequestException::class.java)
+        val e = ThrowableAssert.catchThrowableOfType({ cut.getUrl(timer, uri, "") }, RequestException::class.java)
         assertThat(e).hasMessageContaining(uriPath)
     }
 
     @Test
-    fun getUrl_setsExpectedHeaders() {
+    fun getUrl_setsDefaultHeaders() {
         stubResponse(uriPath, "", 200)
 
-        cut.getUrl(uri, "some/accept", timer)
+        cut.getUrl(timer, uri)
 
         WireMock.verify(WireMock.getRequestedFor(WireMock.urlEqualTo(uriPath))
-                .withHeader("Accept", WireMock.equalTo("some/accept"))
-                .withHeader("User-Agent", WireMock.matching(".+")))
+            .withHeader("Accept", WireMock.equalTo("application/json"))
+            .withHeader("User-Agent", WireMock.matching(".+")))
     }
 
     @Test
-    fun getUrl_callsRequestTimer() {
+    fun getUrl_setsCustomAcceptHeader() {
         stubResponse(uriPath, "", 200)
-        cut.getUrl(uri, "", timer)
-        assertThat(timer.recordCalled).isTrue()
+
+        cut.getUrl(timer, uri, "some/accept")
+
+        WireMock.verify(WireMock.getRequestedFor(WireMock.urlEqualTo(uriPath))
+                .withHeader("Accept", WireMock.equalTo("some/accept")))
+    }
+
+    @Test
+    fun getUrl_setsAdditionalHeaders() {
+        stubResponse(uriPath, "", 200)
+
+        cut.getUrl(timer, uri, additionalHeaders = listOf("A", "a", "B", "b"))
+
+        WireMock.verify(WireMock.getRequestedFor(WireMock.urlEqualTo(uriPath))
+            .withHeader("A", WireMock.equalTo("a"))
+            .withHeader("B", WireMock.equalTo("b")))
     }
 }

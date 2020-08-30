@@ -3,9 +3,10 @@ plugins {
 
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.spring") version kotlinVersion
+    kotlin("plugin.serialization") version kotlinVersion
+
     id("org.springframework.boot") version "2.3.3.RELEASE"
     id("io.spring.dependency-management") version "1.0.10.RELEASE"
-
     id("com.gorylenko.gradle-git-properties") version "2.2.3"
     id("io.gitlab.arturbosch.detekt") version "1.12.0"
 }
@@ -18,7 +19,7 @@ version = "2.0.0-SNAPSHOT"
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter() // required for detekt
+    jcenter() // required for detekt, kotlinx-serialization
     maven { url = uri("https://jitpack.io") } // required for com.github.JensPiegsa:wiremock-extension
 }
 
@@ -32,6 +33,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.+")
 
     implementation("com.github.spartusch:excel-web-query:2.+")
 

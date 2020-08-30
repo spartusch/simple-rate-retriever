@@ -53,19 +53,13 @@ class RateController(private val rateService: RateService, private val webQueryS
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleException(
-        e: MethodArgumentTypeMismatchException
-    ): String? = "'${e.value}' is not a valid ${e.name}"
+    fun handleException(e: MethodArgumentTypeMismatchException) = "'${e.value}' is not a valid ${e.name}"
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleException(
-        e: IllegalArgumentException
-    ): String? = e.localizedMessage
+    fun handleException(e: IllegalArgumentException) = e.localizedMessage
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun handleException(
-        e: RuntimeException
-    ): String? = e.localizedMessage
+    fun handleException(e: RuntimeException) = e.localizedMessage
 }
