@@ -26,7 +26,7 @@ class OnVistaRateProvider(
 
     private val assetLinkRegex = "\"snapshotlink\":\"([^\"]+)\"".toRegex()
     private val amountRegex = ("<span class=\"price\">([0-9,.]+) EUR</span>" +
-            "|Umrechnung:</a>\\s*([0-9,.]+) EUR" +
+            "|UMRECHNUNGSKURS:\\s*([0-9,.]+) EUR" +
             "|<span data-push[^>]*>([0-9,.]+)</span>\\s*<span[^>]+>EUR</span>").toRegex()
 
     private fun Regex.extractFirst(
