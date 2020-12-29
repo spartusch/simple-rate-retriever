@@ -1,20 +1,20 @@
 plugins {
-    val kotlinVersion = "1.4.20"
+    val kotlinVersion = "1.4.21"
 
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.spring") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
 
-    id("org.springframework.boot") version "2.3.5.RELEASE"
+    id("org.springframework.boot") version "2.4.1"
     id("io.spring.dependency-management") version "1.0.10.RELEASE"
     id("com.gorylenko.gradle-git-properties") version "2.2.4"
-    id("io.gitlab.arturbosch.detekt") version "1.14.2"
+    id("io.gitlab.arturbosch.detekt") version "1.15.0"
 }
 
 val jvmTarget = "11"
 
 group = "com.github.spartusch"
-version = "2.0.0-SNAPSHOT"
+version = "2.0.0"
 
 repositories {
     mavenLocal()
@@ -23,9 +23,9 @@ repositories {
     maven { url = uri("https://jitpack.io") } // required for com.github.JensPiegsa:wiremock-extension
 }
 
-configurations
-    .filter { it.name.endsWith("compileClasspath", ignoreCase = true) || it.name == "detektPlugins" }
-    .forEach { it.resolutionStrategy.activateDependencyLocking() }
+dependencyLocking {
+    lockAllConfigurations()
+}
 
 dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -64,14 +64,13 @@ tasks {
 
     test {
         useJUnitPlatform()
-        testLogging.events("started", "skipped", "failed")
+        testLogging.events("skipped", "failed")
     }
 
     bootJar {
         if (project.hasProperty("generateLaunchScript")) {
             launchScript()
         }
-        layered()
     }
 
     register<Exec>("dockerImage") {

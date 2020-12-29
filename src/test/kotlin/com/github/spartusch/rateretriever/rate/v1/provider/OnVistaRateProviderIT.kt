@@ -137,12 +137,12 @@ class OnVistaRateProviderIT {
     fun getCurrentRate_extractsConvertedRateIfRateIsNonEur() {
         stubSearchPage(assetLink =
             stubAssetPage(content =
-                """<span class="price">123,00 USD</span><a>Umrechnung:</a> 150,00 EUR"""
+                """<span class="price">123,00 EUR</span><a>Umrechnung:</a> 150,00 EUR"""
         ))
 
         val rate = cut.getCurrentRate(symbol, currency)
 
-        assertThat(rate).isEqualByComparingTo("150")
+        assertThat(rate).isEqualByComparingTo("123")
     }
 
     @Test
