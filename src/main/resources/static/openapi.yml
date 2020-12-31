@@ -1,0 +1,107 @@
+openapi: 3.0.2
+info:
+  title: Simple-Rate-Retriever
+  version: v1
+externalDocs:
+  url: https://github.com/spartusch/simple-rate-retriever
+servers:
+  - url: 'http://localhost:8080'
+    description: Started directly (bin/run.sh, bootRun or IDE)
+  - url: 'http://localhost:18091'
+    description: Started using docker (bin/run-container.sh)
+tags:
+  - name: Rate
+    description: Retrieval of ticker symbol rates
+paths:
+  '/rate/v1/{providerId}/{tickerSymbol}/{currencyCode}':
+    get:
+      tags:
+        - Rate
+      operationId: getCurrentRate
+      summary: Retrieves the current rate of a given symbol
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProviderId'
+        - name: tickerSymbol
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TickerSymbol'
+        - name: currencyCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+        - name: locale
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  '/rate/v1/{providerId}/{tickerSymbol}/{currencyCode}/iqy':
+    get:
+      tags:
+        - Rate
+      operationId: downloadWebQueryForRequest
+      summary: Downloads a web query for the current rate of a given symbol
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProviderId'
+        - name: tickerSymbol
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TickerSymbol'
+        - name: currencyCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+        - name: locale
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Locale'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    ProviderId:
+      type: string
+    TickerSymbol:
+      type: string
+    CurrencyCode:
+      type: string
+      pattern: "[A-Z]{3}"
+    Locale:
+      type: string
+      pattern: "[a-z]{2}-[A-Z]{2}"
+      default: "en-US"

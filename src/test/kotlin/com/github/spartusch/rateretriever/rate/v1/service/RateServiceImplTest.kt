@@ -2,7 +2,7 @@ package com.github.spartusch.rateretriever.rate.v1.service
 
 import com.github.spartusch.rateretriever.rate.v1.configuration.SimpleRateRetrieverProperties
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
-import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
+import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
 import com.github.spartusch.rateretriever.rate.v1.provider.RateProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
@@ -20,7 +20,7 @@ class RateServiceImplTest {
     private lateinit var cut: RateServiceImpl
 
     private val providerId = ProviderId("provider")
-    private val symbol = TradeSymbol("etf110")
+    private val symbol = TickerSymbol("etf110")
     private val currency = Currency.getInstance("EUR")
     private val locale = Locale.forLanguageTag("de-DE")
 

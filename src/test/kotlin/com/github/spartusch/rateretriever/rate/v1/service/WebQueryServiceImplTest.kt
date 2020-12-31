@@ -1,18 +1,19 @@
 package com.github.spartusch.rateretriever.rate.v1.service
 
-import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
+import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
 import com.github.spartusch.webquery.WebQueryFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.core.io.ByteArrayResource
 import java.util.Currency
 
 class WebQueryServiceImplTest {
 
     private lateinit var cut: WebQueryServiceImpl
 
-    private val symbol = TradeSymbol("symbol")
+    private val symbol = TickerSymbol("symbol")
     private val currency = Currency.getInstance("EUR")
 
     @BeforeEach
@@ -24,7 +25,7 @@ class WebQueryServiceImplTest {
     fun getWebQueryEntity_content() {
         val webQuery = WebQueryFactory.create("someUri")
         val entity = cut.getWebQueryEntity("someUri", symbol, currency)
-        assertThat(entity.body).isEqualTo(webQuery.contentBytes)
+        assertThat(entity.body).isEqualTo(ByteArrayResource(webQuery.contentBytes))
     }
 
     @Test

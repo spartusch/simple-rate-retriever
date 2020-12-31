@@ -4,6 +4,7 @@ server.port: 8080
 spring:
   application.name: simple-rate-retriever
   metrics.prometheus.enabled: true
+  web.resources.add-mappings: true
 
 management:
   security.enabled: false
@@ -15,7 +16,9 @@ management:
 
 simple-rate-retriever:
   fraction-digits: 4
-  request-logging-filter.exclude: '/actuator'
+  request-logging-filter.exclude:
+    - '/actuator'
+    - '/swagger-ui'
   providers:
     coin-market-cap:
       id: 'coinmarket'

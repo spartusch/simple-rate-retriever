@@ -7,7 +7,7 @@ import com.github.spartusch.rateretriever.rate.WireMockUtils.stubResponse
 import com.github.spartusch.rateretriever.rate.v1.configuration.CoinMarketCapProperties
 import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException
 import com.github.spartusch.rateretriever.rate.v1.exception.RequestException
-import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
+import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
@@ -33,7 +33,7 @@ class CoinMarketCapRateProviderIT {
 
     private lateinit var cut: CoinMarketCapRateProvider
 
-    private val symbol = TradeSymbol("BTC")
+    private val symbol = TickerSymbol("BTC")
     private val currency = Currency.getInstance("EUR")
 
     @BeforeEach

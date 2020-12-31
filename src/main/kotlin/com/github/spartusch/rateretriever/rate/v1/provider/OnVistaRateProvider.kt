@@ -3,7 +3,7 @@ package com.github.spartusch.rateretriever.rate.v1.provider
 import com.github.spartusch.rateretriever.rate.v1.configuration.OnVistaProperties
 import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
-import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
+import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
@@ -22,7 +22,7 @@ class OnVistaRateProvider(
 ) : AbstractTimedRateProvider(meterRegistry) {
 
     private val providerId = ProviderId(properties.id)
-    private val symbolToUriCache = ConcurrentHashMap<TradeSymbol, URI>()
+    private val symbolToUriCache = ConcurrentHashMap<TickerSymbol, URI>()
 
     private val assetLinkRegex = "\"snapshotlink\":\"([^\"]+)\"".toRegex()
     private val amountRegex = ("<span class=\"price\">([0-9,.]+) EUR</span>" +
@@ -42,11 +42,11 @@ class OnVistaRateProvider(
     override fun isCurrencySupported(currency: Currency) = ("EUR" == currency.currencyCode)
 
     private fun getSearchUri(
-        symbol: TradeSymbol
+        symbol: TickerSymbol
     ) = symbol.map { sym -> "${properties.uri}$sym".toURI() }
 
     private fun getAssetUri(
-        symbol: TradeSymbol
+        symbol: TickerSymbol
     ) = symbolToUriCache.computeIfAbsent(symbol) {
         httpClient.getUrl(requestTimer, getSearchUri(symbol))
             .let { searchPage -> assetLinkRegex.extractFirst(searchPage) }
@@ -56,7 +56,7 @@ class OnVistaRateProvider(
 
     private fun getCurrentRate(
         retries: Int,
-        symbol: TradeSymbol,
+        symbol: TickerSymbol,
         currency: Currency
     ): BigDecimal = try {
         httpClient.getUrl(requestTimer, getAssetUri(symbol), MediaType.TEXT_HTML_VALUE)
@@ -73,7 +73,7 @@ class OnVistaRateProvider(
     }
 
     override fun getCurrentRate(
-        symbol: TradeSymbol,
+        symbol: TickerSymbol,
         currency: Currency
     ) = getCurrentRate(properties.maxRetries, symbol, currency)
 }

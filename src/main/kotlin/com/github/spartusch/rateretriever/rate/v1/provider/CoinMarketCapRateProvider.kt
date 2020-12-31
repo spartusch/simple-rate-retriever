@@ -3,7 +3,7 @@ package com.github.spartusch.rateretriever.rate.v1.provider
 import com.github.spartusch.rateretriever.rate.v1.configuration.CoinMarketCapProperties
 import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException
 import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
-import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
+import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -90,7 +90,7 @@ class CoinMarketCapRateProvider(
     override fun isCurrencySupported(currency: Currency) = (getCurrencyId(currency) != null)
 
     override fun getCurrentRate(
-        symbol: TradeSymbol,
+        symbol: TickerSymbol,
         currency: Currency
     ): BigDecimal? {
         val currencyId = getCurrencyId(currency) ?: throw IllegalArgumentException("Unsupported currency '$currency'")

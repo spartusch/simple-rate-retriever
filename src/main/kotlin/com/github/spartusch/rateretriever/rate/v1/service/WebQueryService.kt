@@ -1,8 +1,9 @@
 package com.github.spartusch.rateretriever.rate.v1.service
 
-import com.github.spartusch.rateretriever.rate.v1.model.TradeSymbol
+import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
 import com.github.spartusch.webquery.WebQuery
 import com.github.spartusch.webquery.WebQueryFactory
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
@@ -11,18 +12,18 @@ import java.util.Currency
 interface WebQueryService {
     fun getWebQueryEntity(
         uri: String,
-        symbol: TradeSymbol,
+        symbol: TickerSymbol,
         currency: Currency
-    ): HttpEntity<ByteArray>
+    ): HttpEntity<ByteArrayResource>
 }
 
 @Service
 class WebQueryServiceImpl : WebQueryService {
     override fun getWebQueryEntity(
         uri: String,
-        symbol: TradeSymbol,
+        symbol: TickerSymbol,
         currency: Currency
-    ): HttpEntity<ByteArray> {
+    ): HttpEntity<ByteArrayResource> {
         val webQuery = WebQueryFactory.create(uri)
 
         val headers = HttpHeaders()
@@ -31,6 +32,8 @@ class WebQueryServiceImpl : WebQueryService {
         headers[HttpHeaders.CONTENT_DISPOSITION] =
             WebQuery.getContentDisposition(symbol.map { sym -> "${sym}_$currency.iqy" })
 
-        return HttpEntity(webQuery.contentBytes, headers)
+        val resource = ByteArrayResource(webQuery.contentBytes)
+
+        return HttpEntity(resource, headers)
     }
 }

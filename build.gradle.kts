@@ -7,6 +7,7 @@ plugins {
 
     id("org.springframework.boot") version "2.4.1"
     id("io.spring.dependency-management") version "1.0.10.RELEASE"
+    id("org.openapi.generator") version "5.0.0"
     id("com.gorylenko.gradle-git-properties") version "2.2.4"
     id("io.gitlab.arturbosch.detekt") version "1.15.0"
 }
@@ -30,12 +31,15 @@ dependencyLocking {
 dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
-    implementation(kotlin("stdlib-jdk8"))
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:latest.release")
+    implementation("javax.validation:validation-api:latest.release")
 
     implementation("com.github.spartusch:excel-web-query:+")
+
+    // Kotlin Support
+    implementation(kotlin("stdlib-jdk8"))
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:latest.release")
 
     // Monitoring
     implementation("io.micrometer:micrometer-registry-prometheus")
@@ -57,8 +61,22 @@ detekt {
     buildUponDefaultConfig = true
 }
 
+openApiGenerate {
+    generatorName.set("kotlin-spring")
+    inputSpec.set("$projectDir/src/main/resources/static/openapi.yml")
+    outputDir.set("$buildDir/generated-sources")
+    apiPackage.set("com.github.spartusch.rateretriever.rate.v1.controller.generated")
+    globalProperties.set(mapOf("apis" to ""))
+    additionalProperties.set(mapOf("delegatePattern" to "true"))
+}
+
+sourceSets.getByName("main") {
+    java.srcDir("$buildDir/generated-sources")
+}
+
 tasks {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compileKotlin {
+        dependsOn(openApiGenerate)
         kotlinOptions.jvmTarget = jvmTarget
     }
 
