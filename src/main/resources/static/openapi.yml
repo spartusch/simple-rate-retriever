@@ -5,10 +5,10 @@ info:
 externalDocs:
   url: https://github.com/spartusch/simple-rate-retriever
 servers:
-  - url: 'http://localhost:8080'
-    description: Started directly (bin/run.sh, bootRun or IDE)
   - url: 'http://localhost:18091'
     description: Started using docker (bin/run-container.sh)
+  - url: 'http://localhost:8080'
+    description: Started directly (bin/run.sh, bootRun or IDE)
 tags:
   - name: Rate
     description: Provides current rates of ticker symbols
@@ -105,5 +105,4 @@ components:
       pattern: "[A-Z]{3}"
     Locale:
       type: string
-      pattern: "[a-z]{2}-[A-Z]{2}"
       default: "en-US"
