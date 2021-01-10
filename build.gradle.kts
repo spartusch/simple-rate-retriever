@@ -18,10 +18,11 @@ group = "com.github.spartusch"
 version = "2.1.0-SNAPSHOT"
 
 repositories {
-    mavenLocal()
     mavenCentral()
     jcenter() // required for detekt, kotlinx-serialization
-    maven { url = uri("https://jitpack.io") } // required for com.github.JensPiegsa:wiremock-extension
+    maven {
+        url = uri("https://jitpack.io") // required for wiremock-extension, excel-web-query
+    }
 }
 
 dependencyLocking {
@@ -34,7 +35,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("javax.validation:validation-api:latest.release")
 
-    implementation("com.github.spartusch:excel-web-query:+")
+    implementation("com.github.spartusch:excel-web-query:latest.release")
 
     // Kotlin Support
     implementation(kotlin("stdlib-jdk8"))

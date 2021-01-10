@@ -1,4 +1,4 @@
-FROM com.github.spartusch/web-query-gradle-base:latest as builder
+FROM adoptopenjdk:11-jdk-hotspot as builder
 WORKDIR /application
 # Set up gradle
 COPY gradlew .

@@ -11,11 +11,24 @@ backend for Excel. It basically helps Excel to get current rates from the web.
 
 ## Installation
 
-In order to run Simple-Rate-Retriever you need to do the following:
+### Using Docker (preferred way)
 
-1) Get and install Docker (e.g. "Docker Desktop" from www.docker.com)
-2) Get and install the base-image of [excel-web-query](https://github.com/spartusch/excel-web-query)
-3) Download the source code of simple-rate-retriever and run `./bin/run-container.sh`
+In order to run Simple-Rate-Retriever using Docker you do need to do the following:
+
+1) Get and install Docker (e.g., "Docker Desktop" from www.docker.com)
+2) Download this repository
+3) Run `./bin/run-container.sh` inside the repository
+4) Go to http://localhost:18091/swagger-ui/index.html
+5) Start using the endpoints
+
+### Without using Docker
+
+1) Ensure JDK 11 (or newer) is installed and JAVA_HOME is set
+2) Clone this repository locally
+3) Run `./bin/run.sh` inside the repository
+4) Go to http://localhost:8080/swagger-ui/index.html
+5) Select the server containing "localhost:8080" from the "Servers" dropdown
+6) Start using the endpoints
 
 ## How to use it
 
@@ -26,10 +39,10 @@ There is also a simple UI at http://localhost:18091/swagger-ui/index.html once S
 You can query current rates using this UI as well as download web queries  to let Microsoft Excel query and import the rates.
 
 The endpoints require you to provide: 
-- providerId: ID of the provider you'd like to use (e.g. coinmarket or stockexchange)
-- tickerSymbol: Symbol of which to retrieve the current rate of (e.g. BTC or IE00B4L5Y983)
-- currencyCode: Currency of the rate (e.g. USD or EUR)
-- locale: (Optional) The locale used for formatting, must be a language tag according to IETF BCP 47 (e.g. de-DE, defaults to en-US)
+- providerId: ID of the provider you'd like to use (e.g., coinmarket or stockexchange)
+- tickerSymbol: Symbol of which to retrieve the current rate of (e.g., BTC or IE00B4L5Y983)
+- currencyCode: Currency of the rate (e.g., USD or EUR)
+- locale: (Optional) The locale used for formatting, must be a language tag according to IETF BCP 47 (e.g., de-DE, defaults to en-US)
 
 ### How to use web queries in Microsoft Excel
 
@@ -60,7 +73,7 @@ the following contents:
 cmc_api_key=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` should be replaced with your API key for CoinMarketCap. Please note that the file `bin/secrets.vars`
-is only used when running a command from the `bin` directory, e.g. when running `./bin/run-container.sh`.
+is only used when running a command from the `bin` directory, e.g., when running `./bin/run-container.sh`.
 
 ### How to add a new provider
 
