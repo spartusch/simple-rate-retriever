@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
@@ -28,8 +26,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.context.request.NativeWebRequest
-import java.util.Currency
 import java.util.Locale
+import javax.money.Monetary
 
 @ExtendWith(SpringExtension::class)
 @WebMvcTest(controllers = [RateApiController::class])
@@ -42,6 +40,7 @@ class RateApiControllerIT {
     private lateinit var webQueryService: WebQueryService
 
     @MockBean
+    @Suppress("UnusedPrivateMember")
     private lateinit var requestLoggingFilterProperties: RequestLoggingFilterProperties
 
     @TestConfiguration
@@ -60,7 +59,7 @@ class RateApiControllerIT {
     private val base = "http://localhost"
     private val providerId = ProviderId("provider")
     private val symbol = TickerSymbol("sym")
-    private val currency = Currency.getInstance("EUR")
+    private val currency = Monetary.getCurrency("EUR")
     private val locale = Locale.forLanguageTag("de-DE")
     private val defaultLocale = Locale.forLanguageTag("en-US")
 

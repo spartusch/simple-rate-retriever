@@ -34,6 +34,7 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("javax.validation:validation-api:latest.release")
+    implementation("org.javamoney:moneta:latest.release")
 
     implementation("com.github.spartusch:excel-web-query:latest.release")
 
@@ -48,6 +49,7 @@ dependencies {
     implementation("de.codecentric:spring-boot-admin-starter-client:latest.release")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("io.mockk:mockk:latest.release")
     testImplementation("com.github.tomakehurst:wiremock-standalone:latest.release")
     testImplementation("com.github.JensPiegsa:wiremock-extension:latest.release")
 
@@ -60,6 +62,10 @@ springBoot {
 
 detekt {
     buildUponDefaultConfig = true
+}
+
+allOpen {
+    annotation("org.springframework.boot.context.properties.ConfigurationProperties")
 }
 
 openApiGenerate {

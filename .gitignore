@@ -19,5 +19,8 @@ build/
 # Gradle
 .gradle/
 
+# JavaMoney
+.resourceCache/
+
 *.log*
 **/secrets.vars

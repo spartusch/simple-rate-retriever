@@ -6,13 +6,14 @@ import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
 import com.github.spartusch.rateretriever.rate.v1.provider.RateProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
+import org.javamoney.moneta.Money
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import java.math.BigDecimal
-import java.util.Currency
 import java.util.Locale
+import javax.money.Monetary
 
 class RateServiceImplTest {
 
@@ -21,7 +22,7 @@ class RateServiceImplTest {
 
     private val providerId = ProviderId("provider")
     private val symbol = TickerSymbol("etf110")
-    private val currency = Currency.getInstance("EUR")
+    private val currency = Monetary.getCurrency("EUR")
     private val locale = Locale.forLanguageTag("de-DE")
 
     @BeforeEach
@@ -65,7 +66,8 @@ class RateServiceImplTest {
     fun getCurrentRate_happyCase() {
         given(provider.getProviderId()).willReturn(providerId)
         given(provider.isCurrencySupported(currency)).willReturn(true)
-        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
+        given(provider.getCurrentRate(symbol, currency))
+            .willReturn(Money.of(BigDecimal("12.34"), currency))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
@@ -76,7 +78,8 @@ class RateServiceImplTest {
     fun getCurrentRate_normalizesToUpperCase() {
         given(provider.getProviderId()).willReturn(providerId)
         given(provider.isCurrencySupported(currency)).willReturn(true)
-        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
+        given(provider.getCurrentRate(symbol, currency))
+            .willReturn(Money.of(BigDecimal("12.34"), currency))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
@@ -88,7 +91,8 @@ class RateServiceImplTest {
         cut = RateServiceImpl(SimpleRateRetrieverProperties(fractionDigits = 6), listOf(provider))
         given(provider.getProviderId()).willReturn(providerId)
         given(provider.isCurrencySupported(currency)).willReturn(true)
-        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34"))
+        given(provider.getCurrentRate(symbol, currency))
+            .willReturn(Money.of(BigDecimal("12.34"), currency))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
@@ -99,7 +103,8 @@ class RateServiceImplTest {
     fun getCurrentRate_fractionDigitsAreRoundedAtTheLastDigit() {
         given(provider.getProviderId()).willReturn(providerId)
         given(provider.isCurrencySupported(currency)).willReturn(true)
-        given(provider.getCurrentRate(symbol, currency)).willReturn(BigDecimal("12.34567"))
+        given(provider.getCurrentRate(symbol, currency))
+            .willReturn(Money.of(BigDecimal("12.34567"), currency))
 
         val rate = cut.getCurrentRate(providerId, symbol, currency, locale)
 
@@ -115,7 +120,7 @@ class RateServiceImplTest {
             cut.getCurrentRate(providerId, symbol, currency, locale)
         }, IllegalArgumentException::class.java)
 
-        assertThat(e).hasMessageContaining(currency.displayName) // should report unsupported currency code
+        assertThat(e).hasMessageContaining(currency.currencyCode) // should report unsupported currency code
     }
 
     @Test

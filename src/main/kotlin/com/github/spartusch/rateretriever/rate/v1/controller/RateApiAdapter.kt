@@ -10,10 +10,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.NativeWebRequest
-import java.util.Currency
 import java.util.Locale
 import java.util.Optional
 import java.util.function.Supplier
+import javax.money.Monetary
 import javax.servlet.http.HttpServletRequest
 
 @Service
@@ -26,19 +26,22 @@ class RateApiAdapter(
     override fun getRequest() = Optional.ofNullable(nativeWebRequest)
 
     @Suppress("TooGenericExceptionCaught")
-    private fun <T> mapExceptions(messageFormat: String, vararg messageParams: Any, supplier: Supplier<T>) = try {
-        supplier.get()
-    } catch (e: RuntimeException) {
-        throw IllegalArgumentException(String.format(messageFormat, *messageParams), e)
-    }
+    private fun <T> mapExceptions(messageFormat: String, vararg messageParams: Any, supplier: Supplier<T>) =
+        try {
+            supplier.get()
+        } catch (e: RuntimeException) {
+            throw IllegalArgumentException(String.format(messageFormat, *messageParams), e)
+        }
 
-    private fun parseCurrencyCode(code: String) = mapExceptions("'%s' is not a valid currency", code) {
-        Currency.getInstance(code)
-    }
+    private fun parseCurrencyCode(code: String) =
+        mapExceptions("'%s' is not a valid currency", code) {
+            Monetary.getCurrency(code)
+        }
 
-    private fun parseLocale(locale: String) = mapExceptions("'%s' is not a valid locale", locale) {
-        Locale.forLanguageTag(locale)
-    }
+    private fun parseLocale(locale: String) =
+        mapExceptions("'%s' is not a valid locale", locale) {
+            Locale.forLanguageTag(locale.replace('_', '-'))
+        }
 
     override fun getCurrentRate(
         providerId: String,
@@ -81,8 +84,6 @@ class RateApiAdapter(
     }
 
     // Remove "/iqy" suffix from the request URI so the web query will call the actual rate endpoint
-    private fun removeIqyIndicator(
-        requestUrl: String,
-        locale: Locale
-    ) = requestUrl.replaceAfterLast('/', "?locale=$locale")
+    private fun removeIqyIndicator(requestUrl: String, locale: Locale) =
+        requestUrl.replaceAfterLast('/', "?locale=${locale.toLanguageTag()}")
 }

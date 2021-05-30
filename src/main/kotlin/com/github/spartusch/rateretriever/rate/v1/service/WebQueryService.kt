@@ -7,13 +7,13 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
-import java.util.Currency
+import javax.money.CurrencyUnit
 
 interface WebQueryService {
     fun getWebQueryEntity(
         uri: String,
         symbol: TickerSymbol,
-        currency: Currency
+        currency: CurrencyUnit
     ): HttpEntity<ByteArrayResource>
 }
 
@@ -22,15 +22,15 @@ class WebQueryServiceImpl : WebQueryService {
     override fun getWebQueryEntity(
         uri: String,
         symbol: TickerSymbol,
-        currency: Currency
+        currency: CurrencyUnit
     ): HttpEntity<ByteArrayResource> {
         val webQuery = WebQueryFactory.create(uri)
+        val fileName = "${symbol}_${currency.currencyCode}.iqy"
 
         val headers = HttpHeaders()
         headers[HttpHeaders.CONTENT_TYPE] = webQuery.contentType
         headers[HttpHeaders.CONTENT_LENGTH] = webQuery.contentLength.toString()
-        headers[HttpHeaders.CONTENT_DISPOSITION] =
-            WebQuery.getContentDisposition(symbol.map { sym -> "${sym}_$currency.iqy" })
+        headers[HttpHeaders.CONTENT_DISPOSITION] = WebQuery.getContentDisposition(fileName)
 
         val resource = ByteArrayResource(webQuery.contentBytes)
 

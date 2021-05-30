@@ -7,14 +7,14 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ByteArrayResource
-import java.util.Currency
+import javax.money.Monetary
 
 class WebQueryServiceImplTest {
 
     private lateinit var cut: WebQueryServiceImpl
 
     private val symbol = TickerSymbol("symbol")
-    private val currency = Currency.getInstance("EUR")
+    private val currency = Monetary.getCurrency("EUR")
 
     @BeforeEach
     fun setUp() {
