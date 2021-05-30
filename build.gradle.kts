@@ -1,15 +1,15 @@
 plugins {
-    val kotlinVersion = "1.4.21"
+    val kotlinVersion = "1.5.10"
 
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.spring") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
 
-    id("org.springframework.boot") version "2.4.1"
-    id("io.spring.dependency-management") version "1.0.10.RELEASE"
-    id("org.openapi.generator") version "5.0.0"
-    id("com.gorylenko.gradle-git-properties") version "2.2.4"
-    id("io.gitlab.arturbosch.detekt") version "1.15.0"
+    id("org.springframework.boot") version "2.5.0"
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("org.openapi.generator") version "5.1.1"
+    id("com.gorylenko.gradle-git-properties") version "2.3.1"
+    id("io.gitlab.arturbosch.detekt") version "1.17.1"
 }
 
 val jvmTarget = "11"
@@ -19,7 +19,6 @@ version = "2.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    jcenter() // required for detekt, kotlinx-serialization
     maven {
         url = uri("https://jitpack.io") // required for wiremock-extension, excel-web-query
     }
