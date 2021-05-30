@@ -82,7 +82,7 @@ sourceSets.getByName("main") {
 
 tasks {
     compileKotlin {
-        dependsOn(openApiGenerate)
+        dependsOn(openApiGenerate, detekt)
         kotlinOptions.jvmTarget = jvmTarget
     }
 
