@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import java.util.Locale
 import javax.servlet.http.HttpServletRequest
 
 private val log = LoggerFactory.getLogger(ControllerExceptionHandler::class.java)
@@ -15,7 +16,7 @@ class ControllerExceptionHandler {
     private fun logAndGetMessage(e: RuntimeException, request: HttpServletRequest): String {
         log.error("Exception processing request {}", request.requestURI, e)
         val cause = if (e.cause == null) e else e.cause!!
-        return String.format("%s: %s", cause.javaClass.simpleName, e.message)
+        return String.format(Locale.US, "%s: %s", cause.javaClass.simpleName, e.message)
     }
 
     @ExceptionHandler

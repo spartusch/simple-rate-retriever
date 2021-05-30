@@ -79,14 +79,12 @@ class RateApiControllerIT {
     }
 
     @Test
-    fun getCurrentRate_missingLocaleDefaultsToUs() {
+    fun getCurrentRate_localeIsRequired() {
         given(rateService.getCurrentRate(providerId, symbol, currency, defaultLocale))
-                .willReturn("12.3400")
+            .willReturn("12.3400")
 
         mockMvc.perform(get("/rate/v1/provider/sym/EUR"))
-                .andExpect(status().isOk)
-
-        verify(rateService, times(1)).getCurrentRate(providerId, symbol, currency, defaultLocale)
+            .andExpect(status().is4xxClientError)
     }
 
     @Test
@@ -94,7 +92,7 @@ class RateApiControllerIT {
         given(rateService.getCurrentRate(providerId, symbol, currency, defaultLocale))
             .willThrow(IllegalArgumentException("err_msg"))
 
-        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR"))
+        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR?locale=en-US"))
             .andExpect(status().isBadRequest)
             .andReturn()
 
@@ -106,7 +104,7 @@ class RateApiControllerIT {
         given(rateService.getCurrentRate(providerId, symbol, currency, defaultLocale))
                 .willThrow(java.lang.RuntimeException("err_msg"))
 
-        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR"))
+        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR?locale=en-US"))
                 .andExpect(status().isInternalServerError)
                 .andReturn()
 
@@ -115,7 +113,7 @@ class RateApiControllerIT {
 
     @Test
     fun getCurrentRate_invalidCurrencyThrows() {
-        val result = mockMvc.perform(get("/rate/v1/provider/sym/xxx"))
+        val result = mockMvc.perform(get("/rate/v1/provider/sym/xxx?locale=en-US"))
             .andExpect(status().isBadRequest)
             .andReturn()
 
@@ -143,17 +141,13 @@ class RateApiControllerIT {
     }
 
     @Test
-    fun downloadIqyFileForRequest_missingLocaleDefaultsToUs() {
+    fun downloadIqyFileForRequest_localeIsRequired() {
         given(rateService.isRegisteredProviderOrThrow(providerId)).willReturn(true)
         `when`(webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=en_US", symbol, currency))
             .thenReturn(HttpEntity(ByteArrayResource("test".toByteArray())))
 
         mockMvc.perform(get("/rate/v1/provider/sym/EUR/iqy"))
-                .andExpect(status().isOk)
-                .andReturn()
-
-        verify(webQueryService, times(1))
-                .getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=en_US", symbol, currency)
+                .andExpect(status().is4xxClientError)
     }
 
     @Test

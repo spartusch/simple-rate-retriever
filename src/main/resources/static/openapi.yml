@@ -37,7 +37,7 @@ paths:
             $ref: '#/components/schemas/CurrencyCode'
         - name: locale
           in: query
-          required: false
+          required: true
           schema:
             $ref: '#/components/schemas/Locale'
       responses:
@@ -77,7 +77,7 @@ paths:
             $ref: '#/components/schemas/CurrencyCode'
         - name: locale
           in: query
-          required: false
+          required: true
           schema:
             $ref: '#/components/schemas/Locale'
       responses:
@@ -105,4 +105,4 @@ components:
       pattern: "[A-Z]{3}"
     Locale:
       type: string
-      default: "en-US"
+      pattern: "[a-z]+-[A-Z]+"
