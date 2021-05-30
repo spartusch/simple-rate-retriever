@@ -16,7 +16,7 @@ private val log = LoggerFactory.getLogger("RateProviderExtensionsKt")
 @Suppress("MagicNumber")
 private val validStatusCodeRange = 1..399
 
-internal fun HttpClient.getUrl(
+fun HttpClient.getUrl(
     requestTimer: Timer,
     uri: URI,
     accept: String = MediaType.APPLICATION_JSON_VALUE,
@@ -33,16 +33,17 @@ internal fun HttpClient.getUrl(
         .headers(*headers.toTypedArray())
         .build()
 
-    log.debug("Fetching {} as '{}' ...", uri, accept)
+    log.debug("Fetching url '{}'", uri)
 
     val body = requestTimer.recordCallable {
-        this.send(request, HttpResponse.BodyHandlers.ofString())
-            .also { log.debug(" -> Status code: {}", it.statusCode()) }
-            .takeIf { it.statusCode() in validStatusCodeRange }
-            ?.body()
-    } ?: throw RequestException("Couldn't fetch $uri")
-
-    log.trace(" -> Body: {}", body)
+        val response = this.send(request, HttpResponse.BodyHandlers.ofString())
+        if (response.statusCode() !in validStatusCodeRange) {
+            log.error("Failed to fetch '{}', status code: {}", request, response.statusCode())
+            null
+        } else {
+            response?.body()
+        }
+    } ?: throw RequestException("Couldn't fetch '$uri'")
 
     return body
 }

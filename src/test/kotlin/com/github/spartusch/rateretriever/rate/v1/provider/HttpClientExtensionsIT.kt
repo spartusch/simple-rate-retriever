@@ -1,13 +1,11 @@
 package com.github.spartusch.rateretriever.rate.v1.provider
 
-import com.github.jenspiegsa.wiremockextension.ConfigureWireMock
 import com.github.jenspiegsa.wiremockextension.InjectServer
 import com.github.jenspiegsa.wiremockextension.WireMockExtension
 import com.github.spartusch.rateretriever.rate.WireMockUtils.stubResponse
 import com.github.spartusch.rateretriever.rate.v1.exception.RequestException
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
@@ -24,9 +22,6 @@ class HttpClientExtensionsIT {
 
     @InjectServer
     private lateinit var serverMock: WireMockServer
-
-    @ConfigureWireMock
-    private val options = WireMockConfiguration.wireMockConfig().dynamicPort()
 
     private val timer = SimpleMeterRegistry().timer("testTimer")
 
