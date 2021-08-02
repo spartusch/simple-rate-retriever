@@ -1,15 +1,14 @@
+
 plugins {
-    val kotlinVersion = "1.5.10"
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    kotlin("plugin.serialization")
 
-    kotlin("jvm") version kotlinVersion
-    kotlin("plugin.spring") version kotlinVersion
-    kotlin("plugin.serialization") version kotlinVersion
-
-    id("org.springframework.boot") version "2.5.0"
-    id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("org.openapi.generator") version "5.1.1"
-    id("com.gorylenko.gradle-git-properties") version "2.3.1"
-    id("io.gitlab.arturbosch.detekt") version "1.17.1"
+    id("org.springframework.boot")
+    id("io.spring.dependency-management")
+    id("org.openapi.generator")
+    id("com.gorylenko.gradle-git-properties")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 val jvmTarget = "11"
@@ -29,6 +28,8 @@ dependencyLocking {
 }
 
 dependencies {
+    val detektVersion: String by project
+
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -52,7 +53,7 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock-standalone:latest.release")
     testImplementation("com.github.JensPiegsa:wiremock-extension:latest.release")
 
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:latest.release")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detektVersion")
 }
 
 springBoot {
