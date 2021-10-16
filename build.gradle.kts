@@ -72,7 +72,7 @@ openApiGenerate {
     generatorName.set("kotlin-spring")
     inputSpec.set("$projectDir/src/main/resources/static/openapi.yml")
     outputDir.set("$buildDir/generated-sources")
-    apiPackage.set("com.github.spartusch.rateretriever.rate.v1.controller.generated")
+    apiPackage.set("com.github.spartusch.rateretriever.infrastructure.api.generated")
     globalProperties.set(mapOf("apis" to ""))
     additionalProperties.set(mapOf("delegatePattern" to "true"))
 }

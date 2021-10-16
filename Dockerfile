@@ -4,6 +4,7 @@ WORKDIR /application
 COPY gradlew .
 COPY gradle gradle
 RUN chmod +x gradlew
+RUN ./gradlew --version
 # Copy source
 COPY *.gradle.kts ./
 COPY .git .git
