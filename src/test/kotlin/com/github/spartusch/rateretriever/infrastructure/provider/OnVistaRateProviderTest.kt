@@ -1,9 +1,14 @@
-package com.github.spartusch.rateretriever.rate.v1.provider
+package com.github.spartusch.rateretriever.infrastructure.provider
 
-import com.github.spartusch.rateretriever.rate.v1.configuration.OnVistaProperties
-import com.github.spartusch.rateretriever.rate.v1.exception.DataExtractionException
-import com.github.spartusch.rateretriever.rate.v1.model.ProviderId
-import com.github.spartusch.rateretriever.rate.v1.model.TickerSymbol
+import com.github.spartusch.rateretriever.domain.model.ProviderId
+import com.github.spartusch.rateretriever.domain.model.Rate
+import com.github.spartusch.rateretriever.domain.model.TickerSymbol
+import com.github.spartusch.rateretriever.infrastructure.provider.OnVistaRateProviderTestDataFactory.assetPageContents
+import com.github.spartusch.rateretriever.infrastructure.provider.OnVistaRateProviderTestDataFactory.assetUrl
+import com.github.spartusch.rateretriever.infrastructure.provider.OnVistaRateProviderTestDataFactory.searchPageContent
+import com.github.spartusch.rateretriever.infrastructure.provider.OnVistaRateProviderTestDataFactory.searchUrl
+import com.github.spartusch.rateretriever.infrastructure.provider.exception.DataExtractionException
+import com.github.spartusch.rateretriever.infrastructure.provider.extensions.getUrl
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -12,7 +17,6 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.ThrowableAssert
-import org.javamoney.moneta.Money
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -32,33 +36,23 @@ class OnVistaRateProviderTest {
 
     private lateinit var cut: OnVistaRateProvider
 
-    companion object {
-        const val assetUrl = "http://asset"
-        const val searchPageContent = "\"snapshotlink\":\"$assetUrl\""
-
-        fun searchUrl(symbol: String) = "http://search?q=$symbol"
-
-        fun assetPageContents(currency: String) = listOf(
-            "foo <span property=\"schema:priceCurrency\">$currency</span>\n" +
-                    "<meta property=\"schema:price\" content=\"50.0412\"> bar",
-            "foo <span class=\"price\">50,0412 $currency</span> bar",
-            "foo <data class=\"text-nowrap\" value=\"50.0412\">\n" +
-                    " 50,0412\n <span>\n <!-- -->\n $currency\n </span>\n </data> bar"
-        )
+    private companion object {
+        @JvmStatic
+        fun allMonetaryCurrenciesProvider() = Monetary.getCurrencies("default")
+            .map { Arguments.of(it) }
 
         @JvmStatic
-        fun allMonetaryCurrenciesProvider() = Monetary.getCurrencies("default").map { Arguments.of(it) }
-
-        @JvmStatic
-        fun assetPageContentsProvider() = assetPageContents("EUR").map { Arguments.of(it) }
+        fun assetPageContentsProvider() = assetPageContents("SYM", "50.0412", "EUR")
+            .map { Arguments.of(it) }
     }
 
     @BeforeEach
     fun setUp() {
-        mockkStatic("com.github.spartusch.rateretriever.rate.v1.provider.HttpClientExtensionsKt")
+        mockkStatic("com.github.spartusch.rateretriever.infrastructure.provider.extensions.HttpClientExtensionsKt")
+        mockkStatic("javax.money.convert.MonetaryConversions")
         properties = OnVistaProperties("someId", "http://search?q=", 3)
         httpClient = mockk()
-        cut = OnVistaRateProvider(properties, SimpleMeterRegistry(), httpClient)
+        cut = OnVistaRateProvider(properties, httpClient, SimpleMeterRegistry())
     }
 
     @Test
@@ -84,23 +78,23 @@ class OnVistaRateProviderTest {
 
         val result = cut.getCurrentRate(TickerSymbol("SYM"), Monetary.getCurrency("EUR"))
 
-        assertThat(result).isEqualTo(Money.of(BigDecimal("50.0412"), Monetary.getCurrency("EUR")))
+        assertThat(result).isEqualTo(Rate(BigDecimal("50.0412"), Monetary.getCurrency("EUR")))
     }
 
     @Test
     fun getCurrentRate_parsesGBp() {
         mockHttpClient(searchUrl("SYM"), MediaType.APPLICATION_JSON_VALUE, searchPageContent)
-        mockHttpClient(assetUrl, MediaType.TEXT_HTML_VALUE, assetPageContents("GBp")[0])
+        mockHttpClient(assetUrl, MediaType.TEXT_HTML_VALUE, assetPageContents("SYM", "50.0412", "GBp")[0])
 
         val result = cut.getCurrentRate(TickerSymbol("SYM"), Monetary.getCurrency("GBP"))
 
-        assertThat(result).isEqualTo(Money.of(BigDecimal("0.500412"), Monetary.getCurrency("GBP")))
+        assertThat(result).isEqualTo(Rate(BigDecimal("0.500412"), Monetary.getCurrency("GBP")))
     }
 
     @Test
     fun getCurrentRate_convertsCurrencies() {
         mockHttpClient(searchUrl("SYM"), MediaType.APPLICATION_JSON_VALUE, searchPageContent)
-        mockHttpClient(assetUrl, MediaType.TEXT_HTML_VALUE, assetPageContents("USD")[0])
+        mockHttpClient(assetUrl, MediaType.TEXT_HTML_VALUE, assetPageContents("SYM", "1", "USD")[0])
 
         val result = cut.getCurrentRate(TickerSymbol("SYM"), Monetary.getCurrency("EUR"))
 
@@ -117,7 +111,7 @@ class OnVistaRateProviderTest {
         }
 
         assertThat(e.javaClass).isAssignableFrom(DataExtractionException::class.java)
-        assertThat(e).hasMessageContaining("Rate")
+        assertThat(e).hasMessageContaining("rate")
     }
 
     @Test
@@ -135,7 +129,7 @@ class OnVistaRateProviderTest {
     @Test
     fun getCurrentRate_cachesSearchResult() {
         mockHttpClient(searchUrl("SYM"), MediaType.APPLICATION_JSON_VALUE, searchPageContent)
-        mockHttpClient(assetUrl, MediaType.TEXT_HTML_VALUE, assetPageContents("EUR")[0])
+        mockHttpClient(assetUrl, MediaType.TEXT_HTML_VALUE, assetPageContents("SYM", "1", "EUR")[0])
 
         cut.getCurrentRate(TickerSymbol("SYM"), Monetary.getCurrency("EUR"))
         cut.getCurrentRate(TickerSymbol("SYM"), Monetary.getCurrency("EUR"))
