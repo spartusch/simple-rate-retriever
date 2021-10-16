@@ -1,21 +1,16 @@
 pluginManagement {
-    val kotlinVersion: String by settings
-    val springBootVersion: String by settings
-    val springDependencyManagementVersion: String by settings
-    val openApiGeneratorVersion: String by settings
-    val gradleGitPropertiesVersion: String by settings
-    val detektVersion: String by settings
+    val kotlinVersion = "1.5.31"
 
     plugins {
         kotlin("jvm") version kotlinVersion
         kotlin("plugin.spring") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
 
-        id("org.springframework.boot") version springBootVersion
-        id("io.spring.dependency-management") version springDependencyManagementVersion
-        id("org.openapi.generator") version openApiGeneratorVersion
-        id("com.gorylenko.gradle-git-properties") version gradleGitPropertiesVersion
-        id("io.gitlab.arturbosch.detekt") version detektVersion
+        id("org.springframework.boot") version "2.5.5"
+        id("io.spring.dependency-management") version "1.0.11.RELEASE"
+        id("org.openapi.generator") version "5.2.1"
+        id("com.gorylenko.gradle-git-properties") version "2.3.1"
+        id("io.gitlab.arturbosch.detekt") version "latest.release"
     }
 }
 
