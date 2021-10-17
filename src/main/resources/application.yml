@@ -1,8 +1,11 @@
 
-server.port: 8080
+server:
+  port: 8080
+  shutdown: graceful
 
 spring:
   application.name: simple-rate-retriever
+  main.lazy-initialization: true
   metrics.prometheus.enabled: true
   web.resources.add-mappings: true
 
