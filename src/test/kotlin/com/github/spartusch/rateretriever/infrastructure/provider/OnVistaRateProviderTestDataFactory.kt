@@ -83,13 +83,22 @@ internal object OnVistaRateProviderTestDataFactory {
             foo <span property="schema:priceCurrency">$currency</span> something
             <meta property="schema:price" content="$amount"> bar
         """,
-        jsonDataForInstrument(Instrument(name = symbol), amount = amount, currency = currency),
-        jsonDataForInstrument(Instrument(isin = symbol), amount = amount, currency = currency),
-        jsonDataForInstrument(Instrument(wkn = symbol), amount = amount, currency = currency),
-        jsonDataForInstrument(Instrument(symbol = symbol), amount = amount, currency = currency),
-        jsonDataForRelatedInstrument(Instrument(name = symbol), amount = amount, currency = currency),
-        jsonDataForRelatedInstrument(Instrument(isin = symbol), amount = amount, currency = currency),
-        jsonDataForRelatedInstrument(Instrument(wkn = symbol), amount = amount, currency = currency),
-        jsonDataForRelatedInstrument(Instrument(symbol = symbol), amount = amount, currency = currency)
+        "foo <span class=\"price\">${amount.replace('.', ',')} $currency</span> bar", // German locale
+        """
+            foo <data class=\"text-nowrap\" value=\"$amount\">
+            ${amount.replace('.', ',')}
+            <span>            
+            <!-- -->
+            $currency
+            </span>
+        """,
+        jsonDataForInstrument(Instrument(name = symbol), amount, currency),
+        jsonDataForInstrument(Instrument(isin = symbol), amount, currency),
+        jsonDataForInstrument(Instrument(wkn = symbol), amount, currency),
+        jsonDataForInstrument(Instrument(symbol = symbol), amount, currency),
+        jsonDataForRelatedInstrument(Instrument(name = symbol), amount, currency),
+        jsonDataForRelatedInstrument(Instrument(isin = symbol), amount, currency),
+        jsonDataForRelatedInstrument(Instrument(wkn = symbol), amount, currency),
+        jsonDataForRelatedInstrument(Instrument(symbol = symbol), amount, currency),
     )
 }
