@@ -10,7 +10,7 @@ pluginManagement {
         id("io.spring.dependency-management") version "1.0.11.RELEASE"
         id("org.openapi.generator") version "5.2.1"
         id("com.gorylenko.gradle-git-properties") version "2.3.1"
-        id("io.gitlab.arturbosch.detekt") version "latest.release"
+        id("io.gitlab.arturbosch.detekt") version "1.18.1"
     }
 }
 

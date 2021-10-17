@@ -52,8 +52,6 @@ dependencies {
     testImplementation("io.mockk:mockk:latest.release")
     testImplementation("com.github.tomakehurst:wiremock-standalone:latest.release")
     testImplementation("com.github.JensPiegsa:wiremock-extension:latest.release")
-
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:latest.release")
 }
 
 springBoot {
