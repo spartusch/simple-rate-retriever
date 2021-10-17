@@ -19,7 +19,7 @@ class RateService(private val rateProviders: List<RateProvider>) {
         return try {
             provider.getCurrentRate(symbol, currency)
         } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
-            log.error("Error fetching '$symbol' as '$currency' from '${provider.getProviderId()}'", e)
+            log.error("Error fetching '$symbol' in '$currency' from '${provider.getProviderId()}'", e)
             return null
         }
     }
