@@ -25,6 +25,8 @@ import javax.money.Monetary
 import javax.money.MonetaryAmount
 import javax.money.convert.MonetaryConversions
 
+const val PENCE_IN_POUND_STERLING =  100
+
 @Service
 class OnVistaRateProvider(
     private val properties: OnVistaProperties,
@@ -49,11 +51,10 @@ class OnVistaRateProvider(
             .toURI()
     }
 
-    @Suppress("MagicNumber")
     private fun convertRateData(rateData: Pair<BigDecimal, String>): MonetaryAmount {
         val (rate, rateCurrency) = rateData
         return if ("GBp" == rateCurrency) {
-            Money.of(rate.divide(BigDecimal(100)), Monetary.getCurrency("GBP"))
+            Money.of(rate.divide(BigDecimal(PENCE_IN_POUND_STERLING)), Monetary.getCurrency("GBP"))
         } else {
             Money.of(rate, Monetary.getCurrency(rateCurrency))
         }
