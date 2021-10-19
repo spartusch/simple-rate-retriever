@@ -14,6 +14,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.javamoney.moneta.Money
 import org.springframework.http.MediaType
+import org.springframework.retry.RetryCallback
+import org.springframework.retry.RetryContext
+import org.springframework.retry.listener.RetryListenerSupport
+import org.springframework.retry.support.RetryTemplate
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.net.URI
@@ -35,7 +39,7 @@ class OnVistaRateProvider(
 ) : AbstractTimedRateProvider(meterRegistry) {
 
     private val providerId = ProviderId(properties.id)
-    private val symbolToUriCache = ConcurrentHashMap<TickerSymbol, URI>()
+    private val symbolToUriCache = SymbolToUriCache(properties)
     private val assetLinkRegex = "\"snapshotlink\":\"([^\"]+)\"".toRegex()
 
     override fun getProviderId() = providerId
@@ -60,27 +64,51 @@ class OnVistaRateProvider(
         }
     }
 
-    @Suppress("MagicNumber")
-    private fun getCurrentRate(retries: Int, symbol: TickerSymbol, currency: CurrencyUnit): MonetaryAmount =
-        try {
-            val page = httpClient.getUrl(requestTimer, getAssetUri(symbol), MediaType.TEXT_HTML_VALUE)
-            val conversion = MonetaryConversions.getConversion(currency)
-            val rateData = OnVistaRateDataExtractor.extractRateDataFromPageOrThrow(page, symbol)
-            convertRateData(rateData).with(conversion)
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
-            symbolToUriCache.remove(symbol)
-            if (retries > 0) {
-                getCurrentRate(retries - 1, symbol, currency)
-            } else {
-                throw e
+    override fun getCurrentRate(symbol: TickerSymbol, currency: CurrencyUnit): Rate =
+        symbolToUriCache.removeOnErrorRetryTemplate
+            .execute<Rate, Exception> {
+                symbolToUriCache.storeSymbolInRetryContext(it, symbol)
+                val page = httpClient.getUrl(requestTimer, getAssetUri(symbol), MediaType.TEXT_HTML_VALUE)
+                val conversion = MonetaryConversions.getConversion(currency)
+                val rateData = RateDataExtractor.extractRateDataFromPageOrThrow(page, symbol)
+                Rate(convertRateData(rateData).with(conversion))
             }
-        }
-
-    override fun getCurrentRate(symbol: TickerSymbol, currency: CurrencyUnit) =
-        Rate(getCurrentRate(properties.maxRetries, symbol, currency))
 }
 
-private object OnVistaRateDataExtractor {
+private class SymbolToUriCache(properties: OnVistaProperties) {
+    private val symbolToUriMap = ConcurrentHashMap<TickerSymbol, URI>()
+
+    val removeOnErrorRetryTemplate: RetryTemplate = RetryTemplate.builder()
+        .maxAttempts(properties.maxAttempts)
+        .withListener(OnErrorRemoveRetryListener(symbolToUriMap))
+        .build()
+
+    fun computeIfAbsent(symbol: TickerSymbol, mappingFunction: Function1<TickerSymbol, URI>) =
+        symbolToUriMap.computeIfAbsent(symbol, mappingFunction)
+
+    fun storeSymbolInRetryContext(context: RetryContext, symbol: TickerSymbol) =
+        context.setAttribute(symbolAttributeName, symbol)
+
+    companion object {
+        private const val symbolAttributeName = "symbol_attr"
+    }
+
+    private class OnErrorRemoveRetryListener(
+        private val symbolToUriCache: ConcurrentHashMap<TickerSymbol, URI>
+        ) : RetryListenerSupport() {
+        override fun <T : Any?, E : Throwable?> onError(
+            context: RetryContext?,
+            callback: RetryCallback<T, E>?,
+            throwable: Throwable?
+        ) {
+            context?.getAttribute(symbolAttributeName)?.let {
+                symbolToUriCache.remove(it)
+            }
+        }
+    }
+}
+
+private object RateDataExtractor {
     private object OnVistaJson {
         @Serializable
         data class Quote(

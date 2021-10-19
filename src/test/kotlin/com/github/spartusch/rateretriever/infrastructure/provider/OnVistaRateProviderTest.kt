@@ -149,7 +149,7 @@ class OnVistaRateProviderTest {
             cut.getCurrentRate(TickerSymbol("SYM"), Monetary.getCurrency("EUR"))
         }
 
-        verify(exactly = properties.maxRetries + 1) {
+        verify(exactly = properties.maxAttempts) {
             httpClient.getUrl(any(), URI(searchUrl("SYM")), MediaType.APPLICATION_JSON_VALUE)
             httpClient.getUrl(any(), URI(assetUrl), MediaType.TEXT_HTML_VALUE)
         }
