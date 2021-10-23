@@ -6,7 +6,7 @@ pluginManagement {
         kotlin("plugin.spring") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
 
-        id("org.springframework.boot") version "2.5.5"
+        id("org.springframework.boot") version "2.5.6"
         id("io.spring.dependency-management") version "1.0.11.RELEASE"
         id("org.openapi.generator") version "5.2.1"
         id("com.gorylenko.gradle-git-properties") version "2.3.1"
