@@ -11,7 +11,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt")
 }
 
-val jvmTarget = "11"
+val jvmTarget = "17"
 
 group = "com.github.spartusch"
 version = "2.2.0-SNAPSHOT"

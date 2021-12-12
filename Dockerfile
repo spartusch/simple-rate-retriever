@@ -1,4 +1,7 @@
-FROM adoptopenjdk:11-jdk-hotspot as builder
+FROM alpine:latest as builder
+# Install JDK
+RUN apk add --no-cache openjdk17-jdk
+# Set up project
 WORKDIR /application
 # Set up gradle
 COPY gradlew .
@@ -12,10 +15,11 @@ COPY src src
 # Build and extract layered jar
 RUN ./gradlew --no-daemon bootJar && java -Djarmode=layertools -jar build/libs/*.jar extract
 
-FROM adoptopenjdk:11-jre-hotspot
+FROM alpine:latest
 EXPOSE 8080
 ENV server.port 8080
-RUN adduser --system --group spring
+RUN apk add --no-cache openjdk17-jre-headless
+RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 WORKDIR /application
 COPY --from=builder /application/dependencies .
