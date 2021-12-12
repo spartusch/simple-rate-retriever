@@ -1,7 +1,6 @@
 package com.github.spartusch.rateretriever.infrastructure.api
 
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
 import javax.servlet.FilterChain
@@ -11,7 +10,6 @@ import javax.servlet.http.HttpServletRequest
 
 private val log = LoggerFactory.getLogger(RequestLoggingFilter::class.java)
 
-@ConditionalOnProperty(name = ["simple-rate-retriever.request-logging-filter.enabled"], havingValue = "true")
 @Component
 class RequestLoggingFilter(private val properties: RequestLoggingFilterProperties) : Filter {
 

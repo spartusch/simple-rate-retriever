@@ -22,6 +22,7 @@ simple-rate-retriever:
   request-logging-filter.exclude:
     - '/actuator'
     - '/swagger-ui'
+    - '/openapi.yml'
   providers:
     coin-market-cap:
       id: 'coinmarket'
