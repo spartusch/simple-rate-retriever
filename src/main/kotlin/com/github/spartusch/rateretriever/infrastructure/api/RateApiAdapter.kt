@@ -1,10 +1,11 @@
 package com.github.spartusch.rateretriever.infrastructure.api
 
 import com.github.spartusch.rateretriever.application.configuration.SimpleRateRetrieverProperties
+import com.github.spartusch.rateretriever.application.usecase.GetCurrentRate
 import com.github.spartusch.rateretriever.domain.model.ProviderId
 import com.github.spartusch.rateretriever.domain.model.TickerSymbol
-import com.github.spartusch.rateretriever.domain.service.RateService
 import com.github.spartusch.rateretriever.infrastructure.api.generated.RateApiDelegate
+import com.github.spartusch.webquery.WebQueryFactory
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -18,8 +19,7 @@ import javax.servlet.http.HttpServletRequest
 
 @Service
 class RateApiAdapter(
-    private val rateService: RateService,
-    private val webQueryService: WebQueryService,
+    private val getCurrentRate: GetCurrentRate,
     private val nativeWebRequest: NativeWebRequest,
     private val properties: SimpleRateRetrieverProperties
 ) : RateApiDelegate {
@@ -50,7 +50,7 @@ class RateApiAdapter(
         currencyCode: String,
         locale: String
     ): ResponseEntity<String> {
-        val rate = rateService.getCurrentRate(
+        val rate = getCurrentRate(
             ProviderId(providerId),
             TickerSymbol(tickerSymbol),
             parseCurrencyCode(currencyCode)
@@ -69,12 +69,10 @@ class RateApiAdapter(
         currencyCode: String,
         locale: String
     ): ResponseEntity<Resource> {
-        require(rateService.isRegisteredProviderOrThrow(ProviderId(providerId)))
         val request = nativeWebRequest.nativeRequest as HttpServletRequest
         val endpoint = removeIqyIndicator(request.requestURL.toString(), parseLocale(locale))
-        val entity = webQueryService.getWebQueryEntity(
-            endpoint, TickerSymbol(tickerSymbol), parseCurrencyCode(currencyCode)
-        )
+        val entity = WebQueryFactory.create(endpoint)
+            .toHttpEntity(TickerSymbol(tickerSymbol), parseCurrencyCode(currencyCode))
 
         return if (entity.hasBody()) {
             ResponseEntity(entity.body, entity.headers, HttpStatus.OK)

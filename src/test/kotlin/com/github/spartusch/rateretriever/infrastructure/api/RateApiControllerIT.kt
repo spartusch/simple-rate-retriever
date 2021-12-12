@@ -1,9 +1,9 @@
 package com.github.spartusch.rateretriever.infrastructure.api
 
 import com.github.spartusch.rateretriever.application.configuration.SimpleRateRetrieverProperties
+import com.github.spartusch.rateretriever.application.usecase.GetCurrentRate
 import com.github.spartusch.rateretriever.domain.model.ProviderId
 import com.github.spartusch.rateretriever.domain.model.TickerSymbol
-import com.github.spartusch.rateretriever.domain.service.RateService
 import com.github.spartusch.rateretriever.infrastructure.api.generated.RateApiController
 import com.github.spartusch.rateretriever.utils.rate
 import io.mockk.every
@@ -16,10 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -35,27 +31,20 @@ class RateApiControllerIT {
     @ComponentScan(basePackageClasses = [RateApiController::class])
     class BeanConfiguration {
         @Bean
-        fun rateService() = mockk<RateService>()
-
-        @Bean
-        fun webQueryService() = mockk<WebQueryService>()
+        fun getCurrentRate() = mockk<GetCurrentRate>()
 
         @Bean
         fun controllerExceptionHandler() = ControllerExceptionHandler()
 
         @Bean
         fun rateApiAdapter(
-            rateService: RateService,
-            webQueryService: WebQueryService,
+            getCurrentRate: GetCurrentRate,
             nativeWebRequest: NativeWebRequest
-        ) = RateApiAdapter(rateService, webQueryService, nativeWebRequest, SimpleRateRetrieverProperties(4))
+        ) = RateApiAdapter(getCurrentRate, nativeWebRequest, SimpleRateRetrieverProperties(4))
     }
 
     @Autowired
-    private lateinit var rateService: RateService
-
-    @Autowired
-    private lateinit var webQueryService: WebQueryService
+    private lateinit var getCurrentRate: GetCurrentRate
 
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -65,9 +54,11 @@ class RateApiControllerIT {
     private val symbol = TickerSymbol("sym")
     private val currency = Monetary.getCurrency("EUR")
 
+    // getCurrentRate
+
     @Test
     fun getCurrentRate_happyCase() {
-        every { rateService.getCurrentRate(providerId, symbol, currency) } returns rate("123.0000", currency)
+        every { getCurrentRate(providerId, symbol, currency) } returns rate("123.0000", currency)
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR?locale=de-DE"))
                 .andExpect(status().isOk)
@@ -80,7 +71,7 @@ class RateApiControllerIT {
 
     @Test
     fun getCurrentRate_localeIsRequired() {
-        every { rateService.getCurrentRate(providerId, symbol, currency) } returns rate("12.3400", currency)
+        every { getCurrentRate(providerId, symbol, currency) } returns rate("12.3400", currency)
 
         mockMvc.perform(get("/rate/v1/provider/sym/EUR"))
             .andExpect(status().is4xxClientError)
@@ -88,7 +79,7 @@ class RateApiControllerIT {
 
     @Test
     fun getCurrentRate_IllegalArgumentException() {
-        every { rateService.getCurrentRate(providerId, symbol, currency) } throws IllegalArgumentException("err_msg")
+        every { getCurrentRate(providerId, symbol, currency) } throws IllegalArgumentException("err_msg")
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR?locale=en-US"))
             .andExpect(status().isBadRequest)
@@ -99,7 +90,7 @@ class RateApiControllerIT {
 
     @Test
     fun getCurrentRate_RuntimeException() {
-        every { rateService.getCurrentRate(providerId, symbol, currency) } throws java.lang.RuntimeException("err_msg")
+        every { getCurrentRate(providerId, symbol, currency) } throws RuntimeException("err_msg")
 
         val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR?locale=en-US"))
                 .andExpect(status().isInternalServerError)
@@ -121,78 +112,18 @@ class RateApiControllerIT {
 
     @Test
     fun downloadIqyFileForRequest_happyCase() {
-        val headers = HttpHeaders()
-        headers[HttpHeaders.CONTENT_DISPOSITION] = "contentDisposition"
-        headers[HttpHeaders.CONTENT_TYPE] = MediaType.APPLICATION_OCTET_STREAM_VALUE
-
-        every {
-            rateService.isRegisteredProviderOrThrow(providerId)
-        } returns true
-
-        every {
-            webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency)
-        } returns HttpEntity(ByteArrayResource("test".toByteArray()), headers)
-
         val result = mockMvc.perform(get("$base/rate/v1/provider/sym/EUR/iqy?locale=loc"))
                 .andExpect(status().isOk)
-                .andExpect(header().string("Content-Disposition", "contentDisposition"))
-                .andExpect(header().string("Content-Type", MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=sym_EUR.iqy"))
+                .andExpect(header().string("Content-Type", "text/plain; charset=UTF-8"))
                 .andReturn()
 
-        assertThat(result.response.contentAsString).isEqualTo("test")
+        assertThat(result.response.contentAsString).contains("$base/rate/v1/provider/sym/EUR/?locale=loc")
     }
 
     @Test
     fun downloadIqyFileForRequest_localeIsRequired() {
-        every {
-            rateService.isRegisteredProviderOrThrow(providerId)
-        } returns true
-
-        every {
-            webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=en_US", symbol, currency)
-        } returns HttpEntity(ByteArrayResource("test".toByteArray()))
-
         mockMvc.perform(get("/rate/v1/provider/sym/EUR/iqy"))
                 .andExpect(status().is4xxClientError)
-    }
-
-    @Test
-    fun downloadIqyFileForRequest_verifiesProviders() {
-        mockMvc.perform(get("/rate/v1/fakeProvider/sym/EUR/iqy"))
-                .andExpect(status().isBadRequest)
-    }
-
-    @Test
-    fun downloadIqyFileForRequest_IllegalArgumentException() {
-        every {
-            rateService.isRegisteredProviderOrThrow(providerId)
-        } returns true
-
-        every {
-            webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency)
-        } throws java.lang.IllegalArgumentException("err_msg")
-
-        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR/iqy?locale=loc"))
-                .andExpect(status().isBadRequest)
-                .andReturn()
-
-        assertThat(result.response.contentAsString).contains("err_msg")
-    }
-
-    @Test
-    fun downloadIqyFileForRequest_RuntimeException() {
-        every {
-            rateService.isRegisteredProviderOrThrow(providerId)
-        } returns true
-
-        every {
-            webQueryService.getWebQueryEntity("$base/rate/v1/provider/sym/EUR/?locale=loc", symbol, currency)
-        } throws java.lang.RuntimeException("err_msg")
-
-        val result = mockMvc.perform(get("/rate/v1/provider/sym/EUR/iqy?locale=loc"))
-                .andExpect(status().isInternalServerError)
-                .andReturn()
-
-        assertThat(result.response.contentAsString).contains("err_msg")
     }
 }

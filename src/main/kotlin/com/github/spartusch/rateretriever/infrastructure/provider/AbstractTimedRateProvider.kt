@@ -1,4 +1,4 @@
-package com.github.spartusch.rateretriever.application
+package com.github.spartusch.rateretriever.infrastructure.provider
 
 import com.github.spartusch.rateretriever.domain.model.RateProvider
 import io.micrometer.core.instrument.MeterRegistry

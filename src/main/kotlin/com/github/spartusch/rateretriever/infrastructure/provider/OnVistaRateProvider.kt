@@ -1,6 +1,5 @@
 package com.github.spartusch.rateretriever.infrastructure.provider
 
-import com.github.spartusch.rateretriever.application.AbstractTimedRateProvider
 import com.github.spartusch.rateretriever.domain.model.ProviderId
 import com.github.spartusch.rateretriever.domain.model.Rate
 import com.github.spartusch.rateretriever.domain.model.TickerSymbol
