@@ -9,7 +9,8 @@ COPY gradle gradle
 RUN chmod +x gradlew
 RUN ./gradlew --version
 # Copy source
-COPY *.gradle.kts ./
+COPY *.gradle.kts .
+COPY gradle.lockfile .
 COPY .git .git
 COPY src src
 # Build and extract layered jar
