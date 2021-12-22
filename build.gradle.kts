@@ -27,8 +27,6 @@ dependencyLocking {
     lockAllConfigurations()
 }
 
-ext["log4j2.version"] = "2.16.0"
-
 dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
