@@ -8,11 +8,20 @@ spring:
   main.lazy-initialization: true
   metrics.prometheus.enabled: true
   web.resources.add-mappings: true
+  security:
+    user:
+      name: ${ADMIN_USER:admin}
+      password: ${ADMIN_PASSWORD:}
+      roles: ADMIN
+  boot.admin.client.instance.metadata:
+    user:
+      name: ${spring.security.user.name}
+      password: ${spring.security.user.password}
 
 management:
   security.enabled: false
   endpoints:
-    web.exposure.include: health, info, loggers, prometheus, mappings
+    web.exposure.include: '*'
   distribution:
     percentiles-histogram:
       http.server.requests: true

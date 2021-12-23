@@ -35,6 +35,8 @@ fi
 echo "=> Starting new container '$project_name' listening at port $port ..."
 docker run -p$port:8080 \
   -e CMC_API_KEY=$cmc_api_key \
+  -e ADMIN_USER=$admin_user \
+  -e ADMIN_PASSWORD=$admin_password \
   -e spring.boot.admin.client.url=$admin_server \
   -d --network $project_group --name $project_name --restart unless-stopped \
   $project_group'/'$project_name':latest' > /dev/null

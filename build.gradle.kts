@@ -31,6 +31,7 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("javax.validation:validation-api:latest.release")
     implementation("org.javamoney:moneta:latest.release")
     implementation("org.springframework.retry:spring-retry")
