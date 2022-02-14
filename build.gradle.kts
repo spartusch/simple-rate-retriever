@@ -14,7 +14,7 @@ plugins {
 val jvmTarget = "17"
 
 group = "com.github.spartusch"
-version = "2.2.0-SNAPSHOT"
+version = "2.2.0"
 
 repositories {
     mavenCentral()
