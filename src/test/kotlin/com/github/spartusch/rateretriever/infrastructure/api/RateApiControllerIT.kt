@@ -1,5 +1,6 @@
 package com.github.spartusch.rateretriever.infrastructure.api
 
+import com.github.spartusch.rateretriever.application.configuration.SecurityConfiguration
 import com.github.spartusch.rateretriever.application.configuration.SimpleRateRetrieverProperties
 import com.github.spartusch.rateretriever.application.usecase.GetCurrentRate
 import com.github.spartusch.rateretriever.domain.model.ProviderId
@@ -9,6 +10,7 @@ import com.github.spartusch.rateretriever.utils.rate
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,11 +18,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 import org.springframework.web.context.request.NativeWebRequest
 import javax.money.Monetary
 
@@ -28,7 +34,7 @@ import javax.money.Monetary
 @WebMvcTest(controllers = [RateApiController::class])
 class RateApiControllerIT {
     @Configuration
-    @ComponentScan(basePackageClasses = [RateApiController::class])
+    @ComponentScan(basePackageClasses = [RateApiController::class, SecurityConfiguration::class])
     class BeanConfiguration {
         @Bean
         fun getCurrentRate() = mockk<GetCurrentRate>()
@@ -47,12 +53,22 @@ class RateApiControllerIT {
     private lateinit var getCurrentRate: GetCurrentRate
 
     @Autowired
+    private lateinit var context: WebApplicationContext
+
     private lateinit var mockMvc: MockMvc
 
     private val base = "http://localhost"
     private val providerId = ProviderId("provider")
     private val symbol = TickerSymbol("sym")
     private val currency = Monetary.getCurrency("EUR")
+
+    @BeforeEach
+    fun setup() {
+        mockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply<DefaultMockMvcBuilder>(springSecurity())
+            .build()
+    }
 
     // getCurrentRate
 

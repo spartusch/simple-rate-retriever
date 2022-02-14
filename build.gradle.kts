@@ -49,6 +49,7 @@ dependencies {
     implementation("de.codecentric:spring-boot-admin-starter-client:latest.release")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
     testImplementation("io.mockk:mockk:latest.release")
     testImplementation("com.github.tomakehurst:wiremock-standalone:latest.release")
     testImplementation("com.github.JensPiegsa:wiremock-extension:latest.release")
