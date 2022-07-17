@@ -9,7 +9,7 @@ private data class Instrument(
 
 internal object OnVistaRateProviderTestDataFactory {
     const val assetUrl = "http://asset"
-    const val searchPageContent = "\"snapshotlink\":\"$assetUrl\""
+    const val searchPageContent = "\"WEBSITE\":\"$assetUrl\""
 
     fun searchUrl(symbol: String) = "http://search?q=$symbol"
 

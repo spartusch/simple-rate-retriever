@@ -39,7 +39,7 @@ class OnVistaRateProvider(
 
     private val providerId = ProviderId(properties.id)
     private val symbolToUriCache = SymbolToUriCache(properties)
-    private val assetLinkRegex = "\"snapshotlink\":\"([^\"]+)\"".toRegex()
+    private val assetLinkRegex = "\"WEBSITE\":\"([^\"]+)\"".toRegex()
 
     override fun getProviderId() = providerId
 
