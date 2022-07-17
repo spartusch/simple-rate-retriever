@@ -13,10 +13,12 @@ spring:
       name: ${ADMIN_USER:admin}
       password: ${ADMIN_PASSWORD:}
       roles: ADMIN
-  boot.admin.client.instance.metadata:
-    user:
-      name: ${spring.security.user.name}
-      password: ${spring.security.user.password}
+  boot.admin.client:
+    enabled: false
+    instance.metadata:
+      user:
+        name: ${spring.security.user.name}
+        password: ${spring.security.user.password}
 
 management:
   security.enabled: false
@@ -39,7 +41,7 @@ simple-rate-retriever:
       api-key: ${CMC_API_KEY:}
     on-vista:
       id: 'stockexchange'
-      uri: 'https://www.onvista.de/api/header/search?q='
+      uri: 'https://api.onvista.de/api/v1/instruments/query?limit=5&searchValue='
 
 logging:
   level:
