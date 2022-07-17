@@ -30,10 +30,10 @@ dependencyLocking {
 dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("javax.validation:validation-api:latest.release")
     implementation("org.javamoney:moneta:latest.release")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.retry:spring-retry")
 
     implementation("com.github.spartusch:excel-web-query:latest.release")
@@ -47,6 +47,10 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("de.codecentric:spring-boot-admin-starter-client:latest.release")
+
+    // OpenAPI
+    implementation("io.swagger.core.v3:swagger-annotations:latest.release")
+    compileOnly("jakarta.platform:jakarta.jakartaee-api:latest.release")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
